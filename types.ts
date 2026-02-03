@@ -25,6 +25,7 @@ export interface DiaryEntry {
 export interface BabyProfile {
   name: string;
   birthDate: string; // YYYY-MM-DD
+  gender: 'boy' | 'girl'; // Added gender field
 }
 
 export interface DailyQuestion {
@@ -32,4 +33,11 @@ export interface DailyQuestion {
   text: string;
   theme: string;
   date: string; // YYYY-MM-DD string
+}
+
+export interface StoryBook {
+  title: string;
+  coverImage: string;
+  content: string; // The full 3rd person story
+  generatedDate: string;
 }
