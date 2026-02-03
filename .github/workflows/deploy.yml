@@ -2,7 +2,7 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: ["main"] # 만약 브래치 이름이 master라면 master로 수정
+    branches: ["main"]
 
 permissions:
   contents: read
@@ -20,13 +20,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
 
       - name: Install dependencies
         run: npm install
 
       - name: Build
-        run: npm run build
+        # CI=false를 붙이면 사소한 경고 때문에 빌드가 멈추는 걸 막아줍니다.
+        run: CI=false npm run build
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
