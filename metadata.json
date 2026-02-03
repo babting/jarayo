@@ -1,0 +1,7 @@
+{
+  "name": "전지적 아기 시점 (Omniscient Baby View)",
+  "description": "기록은 부모가, 이야기는 아기가. 부모의 음성 기록을 아기의 시선으로 재해석해주는 AI 육아 일기 서비스입니다.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
