@@ -1,17 +1,17 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Navigation from './components/Navigation';
 import RecordingView from './components/RecordingView';
 import CalendarModal from './components/CalendarModal';
 import { generateDailyQuestion, transformToBabyPerspective, generateDiaryIllustration, generateMonthlyStorybook } from './services/geminiService';
 import { DiaryEntry, BabyProfile, DailyQuestion, VoiceNote, StoryBook } from './types';
-import { Sparkles, Loader2, Settings, Image as ImageIcon, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Bell, LayoutGrid, BookOpen, Plus, Clock, Heart, Search, Wand2, Download, RefreshCw, X, Crown, Play, Pause, Share2, Volume2, ArrowRight, CheckCircle2, Circle, ShoppingBag } from 'lucide-react';
+import { Sparkles, Loader2, Image as ImageIcon, Calendar as CalendarIcon, ChevronLeft, ChevronRight, LayoutGrid, BookOpen, Plus, Clock, Heart, Search, Wand2, RefreshCw, X, Crown, Play, Pause, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { storage } from './utils/storage';
 
 // --- Mock Data Setup ---
 const DEFAULT_PROFILE: BabyProfile = {
   name: "쑥쑥이",
   birthDate: "2025-01-25",
-  gender: 'boy' // Default gender
+  gender: 'boy'
 };
 
 // --- Updated Demo Data (Stable URLs) ---
@@ -141,7 +141,6 @@ const HomeView: React.FC<{
   bgImage: string | null;
   onBgSelect: (file: File) => void;
 }> = ({ profile, dailyQuestion, loadingQuestion, hasEntryToday, onOpenRecorder, onOpenSettings, bgImage, onBgSelect }) => {
-  const weeks = calculateWeeks(profile.birthDate);
   const days = calculateDays(profile.birthDate);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -151,7 +150,7 @@ const HomeView: React.FC<{
     }
   };
 
-  const DEFAULT_BG = "https://images.unsplash.com/photo-1519689680058-324335c77eba?q=80&w=1200&auto=format&fit=crop"; // Reliable Night/Cozy BG
+  const DEFAULT_BG = "https://images.unsplash.com/photo-1519689680058-324335c77eba?q=80&w=1200&auto=format&fit=crop"; 
   const currentBg = bgImage || DEFAULT_BG;
 
   const displayText = hasEntryToday
@@ -183,7 +182,6 @@ const HomeView: React.FC<{
 
         <div className="flex items-center gap-3 mt-1 pointer-events-auto">
           <DigitalClock />
-          {/* Notification Bell Removed */}
         </div>
       </header>
 
@@ -235,7 +233,7 @@ const HomeView: React.FC<{
   );
 };
 
-// 3. Storybook View (Full Page)
+// 3. Storybook View
 const StorybookView: React.FC<{
   book: StoryBook;
   onClose: () => void;
@@ -245,7 +243,6 @@ const StorybookView: React.FC<{
   const [isPlaying, setIsPlaying] = useState(false);
 
   useEffect(() => {
-    // Cleanup speech synthesis on unmount
     return () => {
       window.speechSynthesis.cancel();
     };
@@ -259,7 +256,6 @@ const StorybookView: React.FC<{
       const utterance = new SpeechSynthesisUtterance(book.content);
       utterance.lang = 'ko-KR';
       utterance.rate = 1.0;
-      // utterance.pitch = 1.4; // Reverted to default voice
       utterance.onend = () => setIsPlaying(false);
       window.speechSynthesis.speak(utterance);
       setIsPlaying(true);
@@ -268,7 +264,6 @@ const StorybookView: React.FC<{
 
   return (
     <div className="absolute inset-0 z-[100] bg-[#FDFBF7] flex flex-col animate-fade-enter">
-       {/* 1. Header (Fixed) */}
        <div className="flex-none px-6 pt-safe pb-2 flex items-center justify-between h-[52px] z-10 bg-[#FDFBF7]/90 backdrop-blur-sm sticky top-0">
           <div className="flex items-center gap-1 flex-1 min-w-0">
               <button 
@@ -281,9 +276,7 @@ const StorybookView: React.FC<{
           </div>
        </div>
 
-       {/* 2. Scrollable Content (Middle) */}
        <div className="flex-1 overflow-y-auto no-scrollbar pb-10 bg-[#FDFBF7]">
-          {/* Cover Section */}
           <div className="relative w-full aspect-[4/3] bg-stone-200 shadow-sm mb-6">
              <img 
                 src={book.coverImage} 
@@ -292,13 +285,10 @@ const StorybookView: React.FC<{
              />
              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
              <div className="absolute bottom-6 left-6 right-20 text-white">
-                 {/* Date badge removed as requested */}
                  <h1 className="text-2xl font-serif font-bold leading-tight drop-shadow-lg">
                      {book.title}
                  </h1>
              </div>
-             
-             {/* Play Button moved to Cover Image */}
              <button 
                  onClick={(e) => { e.stopPropagation(); togglePlay(); }}
                  className="absolute bottom-5 right-5 w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white border border-white/30 shadow-lg hover:bg-white/30 transition-all active:scale-95"
@@ -307,7 +297,6 @@ const StorybookView: React.FC<{
              </button>
           </div>
 
-          {/* Story Text */}
           <div className="px-6 prose prose-stone max-w-none relative">
              <p className="text-stone-700 leading-[1.8] text-[15px] font-serif text-justify whitespace-pre-line first-letter:text-4xl first-letter:font-serif first-letter:text-rose-400 first-letter:mr-2 first-letter:float-left">
                  {book.content}
@@ -321,7 +310,6 @@ const StorybookView: React.FC<{
           </div>
        </div>
 
-       {/* 3. Footer Actions (Fixed) */}
        <div className="flex-none p-6 bg-white border-t border-stone-100 flex gap-3 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] pb-safe">
           <button 
              onClick={onRegenerate}
@@ -342,7 +330,7 @@ const StorybookView: React.FC<{
   );
 };
 
-// 4. Order View (New Component)
+// 4. Order View
 const OrderView: React.FC<{
   book: StoryBook;
   entries: DiaryEntry[];
@@ -360,7 +348,6 @@ const OrderView: React.FC<{
 
   return (
     <div className="absolute inset-0 z-[120] bg-[#F7F7F5] flex flex-col animate-fade-enter font-sans">
-      {/* Header */}
       <div className="flex-none px-6 pt-safe h-14 flex items-center justify-center relative bg-[#F7F7F5] z-10">
         <button onClick={onClose} className="absolute left-6 p-2 -ml-2 text-stone-600">
            <ChevronLeft size={24} />
@@ -368,36 +355,28 @@ const OrderView: React.FC<{
         <h1 className="text-base font-bold text-stone-800">동화책 만들기</h1>
       </div>
 
-      {/* Scrollable Content */}
       <div className="flex-1 overflow-y-auto no-scrollbar py-6 px-6">
-        
-        {/* Book Preview */}
         <div className="flex justify-center mb-10 mt-2">
             <div className="relative w-48 aspect-[3/4] rounded-r-md rounded-l-sm shadow-[10px_10px_30px_rgba(0,0,0,0.15),_2px_0_5px_rgba(0,0,0,0.1)] bg-white transform rotate-y-12">
                  <img src={book.coverImage} className="w-full h-full object-cover rounded-r-md rounded-l-sm opacity-90" />
-                 {/* White Dim Overlay for Text Readability */}
                  <div className="absolute inset-0 bg-white/40 rounded-r-md"></div>
-                 {/* Gradient for Bottom Text */}
                  <div className="absolute inset-0 bg-gradient-to-t from-white/90 via-white/40 to-transparent rounded-r-md"></div>
-                 
                  <div className="absolute bottom-8 left-0 right-0 text-center px-4">
                      <p className="text-[8px] font-serif text-amber-500 tracking-widest mb-1 font-bold">SPECIAL EDITION</p>
                      <h2 className="text-lg font-serif font-bold text-stone-800 leading-tight mb-2 break-keep">{book.title}</h2>
                      <p className="text-[8px] text-stone-400 font-serif">Omniscient Baby View Storybook</p>
                  </div>
-                 {/* Spine Effect */}
                  <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-r from-black/20 to-transparent rounded-l-sm"></div>
             </div>
         </div>
 
-        {/* Included Stories */}
         <div className="mb-8">
             <div className="flex justify-between items-center mb-3">
                 <h3 className="font-bold text-stone-800">수록될 이야기</h3>
                 <span className="text-xs bg-stone-200 text-stone-600 px-2 py-0.5 rounded-full font-medium">총 {entries.length}편</span>
             </div>
             <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2 -mx-6 px-6">
-                {entries.map((entry, idx) => (
+                {entries.map((entry) => (
                     <div key={entry.id} className="flex-none w-24">
                         <div className="aspect-square rounded-xl overflow-hidden bg-stone-100 mb-2 border border-stone-100">
                             <img src={entry.mainImageUrl} className="w-full h-full object-cover" />
@@ -408,7 +387,6 @@ const OrderView: React.FC<{
             </div>
         </div>
 
-        {/* Cover Type */}
         <div className="mb-8">
             <h3 className="font-bold text-stone-800 mb-3">커버 종류</h3>
             <div className="flex gap-3">
@@ -426,7 +404,6 @@ const OrderView: React.FC<{
                     </div>
                     <p className="text-[10px] text-stone-500 leading-relaxed break-keep">오랫동안 간직해 주는 튼튼한 고급 양장 제본</p>
                 </button>
-
                 <button 
                     onClick={() => setCoverType('soft')}
                     className={`flex-1 p-4 rounded-2xl border-2 text-left relative transition-all ${coverType === 'soft' ? 'border-[#F4B942] bg-[#FFFCF5]' : 'border-transparent bg-white'}`}
@@ -444,7 +421,6 @@ const OrderView: React.FC<{
             </div>
         </div>
 
-        {/* Paper Material */}
         <div className="mb-8">
              <h3 className="font-bold text-stone-800 mb-3">종이 재질</h3>
              <div className="space-y-3">
@@ -467,10 +443,8 @@ const OrderView: React.FC<{
                  ))}
              </div>
         </div>
-
       </div>
 
-      {/* Footer */}
       <div className="flex-none p-6 pb-safe pt-2 bg-gradient-to-t from-[#F7F7F5] to-[#F7F7F5]/0">
           <button 
             className="w-full bg-[#2D2A26] text-white py-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg active:scale-[0.98] transition-transform"
@@ -505,11 +479,6 @@ const DiaryView: React.FC<{
 
   const displayEntries = viewMode === 'grid' ? filteredEntries : entries;
 
-  useEffect(() => {
-    // We don't necessarily reset currentIndex here because 'single' view always uses the full 'entries' list.
-    // This allows seamless navigation even after filtering in Grid mode.
-  }, [viewMode]);
-
   const handlePrevDay = () => {
     if (currentIndex < displayEntries.length - 1) {
       setCurrentIndex(prev => prev + 1);
@@ -523,8 +492,6 @@ const DiaryView: React.FC<{
   };
 
   const handleGridClick = (entryId: string) => {
-    // Find the index of the clicked entry within the FULL entries list
-    // This ensures that when we switch to 'Single' view (which shows all entries), we are at the correct position
     const index = entries.findIndex(e => e.id === entryId);
     if (index !== -1) {
         setCurrentIndex(index);
@@ -557,9 +524,7 @@ const DiaryView: React.FC<{
 
   return (
     <div className="h-full flex flex-col bg-[#F3F0EB]/50 pt-safe pb-28">
-      {/* Top Bar: Search & View Toggle */}
       <div className="px-6 pt-4 pb-2 flex gap-3 z-20 items-center justify-end min-h-[58px]">
-        {/* Search Input - Only Visible in Grid Mode */}
         {viewMode === 'grid' ? (
           <div className="flex-1 relative group animate-fade-in">
              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -573,10 +538,9 @@ const DiaryView: React.FC<{
              />
           </div>
         ) : (
-          <div className="flex-1"></div> /* Spacer */
+          <div className="flex-1"></div> 
         )}
         
-        {/* View Toggle */}
         <div className="bg-white p-1 rounded-2xl flex items-center shadow-sm border border-stone-100 shrink-0 h-[42px]">
           <button 
             onClick={() => setViewMode('single')}
@@ -605,7 +569,6 @@ const DiaryView: React.FC<{
         <>
           {viewMode === 'single' ? (
             <div className="flex-1 overflow-y-auto no-scrollbar pt-4">
-              {/* Header Navigation Pill */}
               <div className="flex justify-center mb-8 px-6 mt-2">
                 <div className="bg-[#FDFBF7] px-6 py-3 rounded-full flex items-center gap-6 shadow-[0_4px_20px_-8px_rgba(0,0,0,0.1)] border border-white">
                     <button 
@@ -630,7 +593,6 @@ const DiaryView: React.FC<{
               </div>
 
               <div className="px-6 pb-10">
-                {/* Current Entry Content */}
                 <div className="mb-6">
                     <p className="text-[#A8A19A] text-[10px] font-extrabold tracking-[0.2em] mb-2 uppercase">Today's Story</p>
                     <h2 className="text-[28px] font-bold text-[#2D2A26] leading-tight break-keep">
@@ -638,7 +600,6 @@ const DiaryView: React.FC<{
                     </h2>
                 </div>
 
-                {/* Main Image Card */}
                 <div className="bg-white p-3 rounded-[2.5rem] shadow-[0_10px_40px_-15px_rgba(0,0,0,0.1)] border border-stone-50 mb-8 animate-fade-enter">
                     <div className="relative aspect-square rounded-[2rem] overflow-hidden bg-stone-100">
                         <img 
@@ -653,14 +614,12 @@ const DiaryView: React.FC<{
                     </div>
                 </div>
 
-                {/* Baby Content */}
                 <div className="px-2 mb-10">
                     <p className="text-stone-600 leading-8 text-[16px] whitespace-pre-line font-medium text-justify">
                         {displayEntries[currentIndex].babyContent}
                     </p>
                 </div>
 
-                {/* Voice Timeline */}
                 <div className="mb-10">
                     <div className="flex items-center gap-2 mb-4 px-2">
                       <div className="w-1.5 h-1.5 rounded-full bg-stone-300"></div>
@@ -689,7 +648,6 @@ const DiaryView: React.FC<{
                     </div>
                 </div>
 
-                {/* Gallery Grid */}
                 <div className="mb-4">
                     <div className="flex items-center gap-2 mb-4 px-2">
                         <ImageIcon size={14} className="text-stone-400" />
@@ -722,11 +680,10 @@ const DiaryView: React.FC<{
               </div>
             </div>
           ) : (
-            /* Grid Mode */
             <>
                 <div className="flex-1 overflow-y-auto no-scrollbar px-6 pt-4 animate-fade-enter">
                   <div className="grid grid-cols-2 gap-4 pb-24">
-                      {displayEntries.map((entry, idx) => (
+                      {displayEntries.map((entry) => (
                         <button 
                           key={entry.id} 
                           onClick={() => handleGridClick(entry.id)}
@@ -756,7 +713,6 @@ const DiaryView: React.FC<{
                   </div>
                 </div>
 
-                {/* Floating "Create Fairytale" Button - Moved OUTSIDE the scroll container */}
                 <button 
                     disabled={bookOrderStatus === 'processing'}
                     onClick={bookOrderStatus === 'processing' ? undefined : onCreateBook}
@@ -795,7 +751,6 @@ const ProfileView: React.FC<{
       </div>
       
       <div className="space-y-8">
-        {/* Name Input */}
         <div className="space-y-2">
           <label className="block text-sm font-bold text-stone-500">아기 이름 (태명)</label>
           <input 
@@ -807,7 +762,6 @@ const ProfileView: React.FC<{
           />
         </div>
 
-        {/* Gender Selection */}
         <div className="space-y-3">
           <label className="block text-sm font-bold text-stone-500">성별</label>
           <div className="flex gap-4">
@@ -836,7 +790,6 @@ const ProfileView: React.FC<{
           </div>
         </div>
 
-        {/* Birth Date Input */}
         <div className="space-y-2">
           <label className="block text-sm font-bold text-stone-500">태어난 날</label>
           <div 
@@ -848,7 +801,6 @@ const ProfileView: React.FC<{
           </div>
         </div>
 
-        {/* Info Card */}
         <div className="pt-8">
            <div className="bg-stone-50 rounded-2xl p-6 flex items-center gap-5 border border-stone-100">
               <div className="w-12 h-12 rounded-full bg-rose-100 text-rose-500 flex items-center justify-center font-bold text-lg">
@@ -876,32 +828,25 @@ const ProfileView: React.FC<{
 // --- Main App Component ---
 
 const App: React.FC = () => {
-  const [currentTab, setCurrentTab] = useState('home');
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  // Navigation State
+  const [currentView, setCurrentView] = useState<'home' | 'diary' | 'record' | 'settings' | 'storybook' | 'order'>('home');
+
   const [profile, setProfile] = useState<BabyProfile>(DEFAULT_PROFILE);
   const [entries, setEntries] = useState<DiaryEntry[]>([]);
   const [homeBgImage, setHomeBgImage] = useState<string | null>(null);
   
-  // Daily Question State
   const [dailyQuestion, setDailyQuestion] = useState<DailyQuestion | null>(null);
   const [loadingQuestion, setLoadingQuestion] = useState(false);
 
-  // Recording State
-  const [isRecordingOpen, setIsRecordingOpen] = useState(false);
   const [processingDiary, setProcessingDiary] = useState(false);
 
-  // Storybook State
   const [storyBook, setStoryBook] = useState<StoryBook | null>(null);
   const [isGeneratingBook, setIsGeneratingBook] = useState(false);
   
-  // Order View State
-  const [isOrderOpen, setIsOrderOpen] = useState(false);
   const [bookOrderStatus, setBookOrderStatus] = useState<'idle' | 'processing'>('idle');
 
-  // Toast State
   const [toast, setToast] = useState<{message: string; visible: boolean}>({message: '', visible: false});
 
-  // Check if today has an entry
   const todayId = new Date().toLocaleDateString('en-CA');
   const hasEntryToday = entries.some(e => e.id === todayId);
 
@@ -996,12 +941,11 @@ const App: React.FC = () => {
   };
 
   const handleRecordingConfirm = async (transcript: string) => {
-    setIsRecordingOpen(false);
-    setCurrentTab('diary');
+    setCurrentView('diary');
     setProcessingDiary(true);
 
     try {
-      const todayId = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
+      const todayId = new Date().toLocaleDateString('en-CA');
       const nowIso = new Date().toISOString();
       const weeks = calculateWeeks(profile.birthDate);
       
@@ -1065,11 +1009,12 @@ const App: React.FC = () => {
   };
 
   const handleCreateBook = async () => {
-    setStoryBook(null); // Ensure loading screen is visible by closing current book
+    setStoryBook(null);
     setIsGeneratingBook(true);
     try {
        const book = await generateMonthlyStorybook(entries, profile.name, profile.gender);
        setStoryBook(book);
+       setCurrentView('storybook');
     } catch (e) {
        console.error(e);
        alert("동화책 생성 중 오류가 발생했습니다.");
@@ -1087,10 +1032,77 @@ const App: React.FC = () => {
 
   const handleOrderConfirm = () => {
     setBookOrderStatus('processing');
-    setIsOrderOpen(false);
+    setCurrentView('diary');
     setStoryBook(null);
-    setCurrentTab('diary');
     showToast("동화책 주문이 완료되었습니다.");
+  };
+
+  // Determine which tab is active for the navigation bar
+  const activeTab = currentView === 'diary' ? 'diary' : 'home';
+  const showNavigation = ['home', 'diary'].includes(currentView);
+
+  const renderContent = () => {
+    switch (currentView) {
+      case 'home':
+        return (
+          <HomeView 
+            profile={profile}
+            dailyQuestion={dailyQuestion}
+            loadingQuestion={loadingQuestion}
+            hasEntryToday={hasEntryToday}
+            onOpenRecorder={() => setCurrentView('record')}
+            onOpenSettings={() => setCurrentView('settings')}
+            bgImage={homeBgImage}
+            onBgSelect={handleBgSelect}
+          />
+        );
+      case 'diary':
+        return (
+          <DiaryView 
+            entries={entries} 
+            loading={processingDiary} 
+            onAddGalleryImage={handleAddGalleryImage}
+            onCreateBook={handleCreateBook}
+            bookOrderStatus={bookOrderStatus}
+          />
+        );
+      case 'settings':
+        return (
+           <ProfileView 
+              profile={profile} 
+              setProfile={handleProfileUpdate} 
+              onBack={() => setCurrentView('home')}
+           />
+        );
+      case 'record':
+        return dailyQuestion ? (
+            <RecordingView 
+              question={hasEntryToday ? "오늘도 이야기를 들려주어서 고마워, 나한테 더 해주고 싶은 말이 있어?" : dailyQuestion.text}
+              onConfirm={handleRecordingConfirm}
+              onCancel={() => setCurrentView('home')}
+            />
+          ) : null;
+      case 'storybook':
+        return storyBook ? (
+             <StorybookView 
+                book={storyBook} 
+                onClose={() => setCurrentView('diary')}
+                onRegenerate={handleCreateBook}
+                onOrder={() => setCurrentView('order')}
+             />
+           ) : null;
+      case 'order':
+        return storyBook ? (
+            <OrderView 
+              book={storyBook}
+              entries={entries}
+              onClose={() => setCurrentView('storybook')}
+              onConfirmOrder={handleOrderConfirm}
+            />
+           ) : null;
+      default:
+        return null;
+    }
   };
 
   return (
@@ -1098,41 +1110,10 @@ const App: React.FC = () => {
       <div className="w-full max-w-md bg-white h-[100dvh] relative shadow-2xl overflow-hidden flex flex-col">
         
         <main className="flex-1 relative overflow-hidden flex flex-col">
-          {currentTab === 'home' && (
-            <div className="flex-1 h-full">
-              <HomeView 
-                profile={profile}
-                dailyQuestion={dailyQuestion}
-                loadingQuestion={loadingQuestion}
-                hasEntryToday={hasEntryToday}
-                onOpenRecorder={() => setIsRecordingOpen(true)}
-                onOpenSettings={() => setIsSettingsOpen(true)}
-                bgImage={homeBgImage}
-                onBgSelect={handleBgSelect}
-              />
-            </div>
-          )}
-          {currentTab === 'diary' && (
-            <div className="flex-1 h-full">
-              <DiaryView 
-                entries={entries} 
-                loading={processingDiary} 
-                onAddGalleryImage={handleAddGalleryImage}
-                onCreateBook={handleCreateBook}
-                bookOrderStatus={bookOrderStatus}
-              />
-            </div>
-          )}
+          <div className="flex-1 h-full">
+            {renderContent()}
+          </div>
 
-          {isSettingsOpen && (
-             <ProfileView 
-                profile={profile} 
-                setProfile={handleProfileUpdate} 
-                onBack={() => setIsSettingsOpen(false)}
-             />
-          )}
-
-          {/* Loading Overlay for Storybook Generation */}
           {isGeneratingBook && (
             <div className="absolute inset-0 z-50 bg-stone-900/40 backdrop-blur-sm flex items-center justify-center flex-col text-white animate-fade-in">
                  <Loader2 className="animate-spin mb-4 text-rose-300" size={48} />
@@ -1141,41 +1122,14 @@ const App: React.FC = () => {
             </div>
           )}
 
-          {/* Storybook Modal Overlay */}
-          {storyBook && (
-             <StorybookView 
-                book={storyBook} 
-                onClose={() => setStoryBook(null)}
-                onRegenerate={handleCreateBook}
-                onOrder={() => setIsOrderOpen(true)}
-             />
-          )}
-
-          {/* Order View Overlay */}
-          {isOrderOpen && storyBook && (
-            <OrderView 
-              book={storyBook}
-              entries={entries}
-              onClose={() => setIsOrderOpen(false)}
-              onConfirmOrder={handleOrderConfirm}
-            />
-          )}
-
-          {/* Toast Notification */}
           <Toast message={toast.message} visible={toast.visible} />
-
         </main>
 
-        {isRecordingOpen && dailyQuestion && (
-          <RecordingView 
-            question={hasEntryToday ? "오늘도 이야기를 들려주어서 고마워, 나한테 더 해주고 싶은 말이 있어?" : dailyQuestion.text}
-            onConfirm={handleRecordingConfirm}
-            onCancel={() => setIsRecordingOpen(false)}
-          />
-        )}
-
-        {!isSettingsOpen && !isRecordingOpen && !storyBook && !isOrderOpen && (
-           <Navigation currentTab={currentTab} onTabChange={setCurrentTab} />
+        {showNavigation && (
+           <Navigation 
+             activeTab={activeTab} 
+             onTabChange={(tab) => setCurrentView(tab as any)} 
+           />
         )}
       </div>
     </div>

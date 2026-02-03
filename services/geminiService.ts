@@ -1,6 +1,29 @@
+import { GoogleGenAI } from "@google/genai";
 import { DiaryEntry, StoryBook } from "../types";
 
-// --- MOCK DATA SERVICES (DEMO MODE) ---
+// --- HELPERS ---
+
+// Safe initialization of AI client
+const getAI = () => {
+  try {
+    // Attempt to access API_KEY safely.
+    // NOTE: In Vite with 'define', process.env.API_KEY might be replaced by a string literal.
+    // If NOT replaced, accessing process directly might fail if strict checks are enabled in browser.
+    
+    // Using a safer access pattern for browser environments
+    const apiKey = typeof process !== 'undefined' && process.env ? process.env.API_KEY : undefined;
+
+    if (apiKey) {
+        return new GoogleGenAI({ apiKey });
+    }
+    return null;
+  } catch (e) {
+    console.warn("Google GenAI client could not be initialized (Missing API Key or Environment issue):", e);
+    return null;
+  }
+};
+
+// --- MOCK DATA SERVICES (FALLBACK) ---
 
 // Mock Questions List
 const MOCK_QUESTIONS = [
@@ -20,10 +43,39 @@ const STORYBOOK_COVERS = [
     "https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?q=80&w=1000&auto=format&fit=crop"  // Deep Night Sky
 ];
 
-// 1. Generate Daily Question (Mock)
+// 1. Generate Daily Question
 export const generateDailyQuestion = async (babyName: string, weeks: number): Promise<{ text: string; theme: string }> => {
-  await new Promise(resolve => setTimeout(resolve, 800));
+  const ai = getAI();
+  
+  // Use AI if available
+  if (ai) {
+    try {
+        const response = await ai.models.generateContent({
+            model: 'gemini-3-flash-preview',
+            contents: `You are a warm, empathetic parenting assistant. Generate a single daily reflective question for a parent of a ${weeks}-week-old baby named "${babyName}".
+            The question should be in Korean, warm, touching, and focused on the baby's growth or the parent's feelings today.
+            It should be phrased as if the baby might be asking, or simply a question for the parent to ponder.
+            Return ONLY a valid JSON object with this structure: { "text": "question string", "theme": "theme string like Love, Memory, Growth" }`,
+            config: { responseMimeType: "application/json" }
+        });
+        
+        const jsonText = response.text;
+        if (jsonText) {
+            const data = JSON.parse(jsonText);
+            if (data.text) {
+                return { 
+                    text: data.text, 
+                    theme: data.theme || "Daily" 
+                };
+            }
+        }
+    } catch (e) {
+        console.error("AI Generation failed, using fallback.", e);
+    }
+  }
 
+  // Fallback to mock
+  await new Promise(resolve => setTimeout(resolve, 800));
   const randomIndex = Math.floor(Math.random() * MOCK_QUESTIONS.length);
   const selected = MOCK_QUESTIONS[randomIndex];
 
@@ -39,11 +91,15 @@ export const transformToBabyPerspective = async (
   babyName: string,
   weeks: number
 ): Promise<Partial<DiaryEntry>> => {
+  // In a real implementation, we would also use AI here.
+  // For now, keeping the mock logic or extending it slightly if needed, 
+  // but focusing on the Daily Question request.
+  
   await new Promise(resolve => setTimeout(resolve, 1500));
 
   return {
     title: `${babyName}와(과) 함께한 따뜻한 하루`,
-    babyContent: `(데모 모드) 오늘 엄마/아빠가 나에게 이런 말을 해주었어요: "${combinedParentInput.slice(0, 30)}..." \n\n비록 내가 모든 말을 이해할 수는 없었지만, 따뜻한 목소리와 눈빛만으로도 충분히 사랑받고 있다는 걸 느낄 수 있었답니다. 내일도 나랑 많이 놀아주세요!`,
+    babyContent: `(AI 데모) 오늘 엄마/아빠가 나에게 이런 말을 해주었어요: "${combinedParentInput.slice(0, 30)}..." \n\n비록 내가 모든 말을 이해할 수는 없었지만, 따뜻한 목소리와 눈빛만으로도 충분히 사랑받고 있다는 걸 느낄 수 있었답니다. 내일도 나랑 많이 놀아주세요!`,
     mood: 'happy',
   };
 };
