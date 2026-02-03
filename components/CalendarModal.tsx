@@ -39,7 +39,7 @@ const CalendarModal: React.FC<CalendarModalProps> = ({ currentDate, onSelect, on
   };
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 animate-fade-in">
+    <div className="absolute inset-0 z-[70] flex items-center justify-center p-4 animate-fade-in">
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose}></div>
 

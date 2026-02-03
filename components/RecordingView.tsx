@@ -122,7 +122,7 @@ const RecordingView: React.FC<RecordingViewProps> = ({ onConfirm, onCancel, ques
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex flex-col bg-[#FDF6F0] h-[100dvh] overflow-hidden animate-fade-enter">
+    <div className="absolute inset-0 z-[60] flex flex-col bg-[#FDF6F0] h-[100dvh] overflow-hidden animate-fade-enter">
       {/* CSS for Blob Animation */}
       <style>{`
         @keyframes blob-bounce {
