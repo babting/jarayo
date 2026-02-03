@@ -27,8 +27,8 @@ const DEMO_ENTRIES: DiaryEntry[] = [
     babyContent: "오늘 나는 거대한 물의 왕국으로 모험을 떠났어요! 첨벙첨벙! 내가 발을 구를 때마다 투명한 보석들이 공중으로 튀어 올랐답니다. \n\n둥둥 떠다니는 노란 오리 친구는 나에게 다가와 비밀 이야기를 속삭여 주었어요. '너는 물의 요정이니?' 하고 묻는 것 같았죠. 하얀 구름 같은 거품들이 내 몸을 포근하게 감싸주었고, 나는 그 속에서 마음껏 헤엄쳤어요. \n\n마지막에 거인(엄마/아빠)이 커다란 수건으로 나를 감싸주었을 때는, 마치 따뜻한 구름 속에 안긴 기분이었답니다.",
     title: "첨벙첨벙! 물의 왕국 탐험",
     mood: 'happy',
-    mainImageUrl: "https://images.unsplash.com/photo-1555252333-9f8e92e65df4?q=80&w=800&auto=format&fit=crop", // Rubber Duck (Stable URL)
-    gallery: ["https://images.unsplash.com/photo-1533038590840-1cde6e668a91?q=80&w=800&auto=format&fit=crop"] // Bubbles/Pool
+    mainImageUrl: "https://images.unsplash.com/photo-1533038590840-1cde6e668a91?q=80&w=800&auto=format&fit=crop", // Bubbles/Pool
+    gallery: [] 
   },
   {
     id: '2024-01-27', 
@@ -105,7 +105,7 @@ const formatTime = (isoString: string) => {
 // 0. Toast Component
 const Toast: React.FC<{ message: string; visible: boolean }> = ({ message, visible }) => {
   return (
-    <div className={`fixed bottom-28 left-1/2 transform -translate-x-1/2 z-[200] pointer-events-none transition-all duration-300 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+    <div className={`absolute bottom-28 left-1/2 transform -translate-x-1/2 z-[200] pointer-events-none transition-all duration-300 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
       <div className="bg-stone-800/90 backdrop-blur-md text-white px-6 py-3.5 rounded-full shadow-xl flex items-center gap-2.5">
         <CheckCircle2 size={18} className="text-green-400" />
         <span className="text-sm font-bold tracking-wide">{message}</span>
@@ -267,7 +267,7 @@ const StorybookView: React.FC<{
   };
 
   return (
-    <div className="fixed inset-0 z-[100] bg-[#FDFBF7] flex flex-col animate-fade-enter">
+    <div className="absolute inset-0 z-[100] bg-[#FDFBF7] flex flex-col animate-fade-enter">
        {/* 1. Header (Fixed) */}
        <div className="flex-none px-6 pt-safe pb-2 flex items-center justify-between h-[52px] z-10 bg-[#FDFBF7]/90 backdrop-blur-sm sticky top-0">
           <div className="flex items-center gap-1 flex-1 min-w-0">
@@ -359,7 +359,7 @@ const OrderView: React.FC<{
   ];
 
   return (
-    <div className="fixed inset-0 z-[120] bg-[#F7F7F5] flex flex-col animate-fade-enter font-sans">
+    <div className="absolute inset-0 z-[120] bg-[#F7F7F5] flex flex-col animate-fade-enter font-sans">
       {/* Header */}
       <div className="flex-none px-6 pt-safe h-14 flex items-center justify-center relative bg-[#F7F7F5] z-10">
         <button onClick={onClose} className="absolute left-6 p-2 -ml-2 text-stone-600">
@@ -760,7 +760,7 @@ const DiaryView: React.FC<{
                 <button 
                     disabled={bookOrderStatus === 'processing'}
                     onClick={bookOrderStatus === 'processing' ? undefined : onCreateBook}
-                    className={`fixed bottom-28 right-6 text-white pl-5 pr-6 py-3.5 rounded-full shadow-[0_8px_30px_rgb(251,113,133,0.4)] flex items-center gap-2.5 z-30 transition-transform active:scale-95 hover:shadow-lg animate-fade-in border border-white/20 ${bookOrderStatus === 'processing' ? 'bg-stone-400 cursor-not-allowed shadow-none' : 'bg-gradient-to-r from-rose-400 to-rose-500'}`}
+                    className={`absolute bottom-28 right-6 text-white pl-5 pr-6 py-3.5 rounded-full shadow-[0_8px_30px_rgb(251,113,133,0.4)] flex items-center gap-2.5 z-30 transition-transform active:scale-95 hover:shadow-lg animate-fade-in border border-white/20 ${bookOrderStatus === 'processing' ? 'bg-stone-400 cursor-not-allowed shadow-none' : 'bg-gradient-to-r from-rose-400 to-rose-500'}`}
                 >
                     <Wand2 size={20} className="text-white" />
                     <span className="font-bold text-sm tracking-wide">{bookOrderStatus === 'processing' ? '동화책 제작중' : '동화책 만들기'}</span>

@@ -13,7 +13,7 @@ const Navigation: React.FC<NavigationProps> = ({ currentTab, onTabChange }) => {
   ];
 
   return (
-    <div className="fixed bottom-8 left-0 right-0 z-50 flex justify-center pointer-events-none">
+    <div className="absolute bottom-8 left-0 right-0 z-50 flex justify-center pointer-events-none">
       <nav className="bg-[#33302E] rounded-full px-8 py-4 shadow-2xl flex items-center gap-10 pointer-events-auto">
         {navItems.map((item) => {
           const isActive = currentTab === item.id;
