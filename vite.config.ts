@@ -1,16 +1,9 @@
-import { defineConfig, loadEnv } from 'vite';
-import react from '@vitejs/plugin-react';
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
 
-export default defineConfig(({ mode }) => {
-  // Load env file based on `mode` in the current working directory.
-  // Set the third parameter to '' to load all env regardless of the `VITE_` prefix.
-  const env = loadEnv(mode, process.cwd(), '');
-  return {
-    plugins: [react()],
-    base: '/',
-    define: {
-      'process.env.API_KEY': JSON.stringify(env.API_KEY),
-      'process.env': {}
-    }
-  };
+// https://vitejs.dev/config/
+export default defineConfig({
+  // GitHub Pages 저장소 이름인 /jarayo/를 설정합니다.
+  base: '/jarayo/', 
+  plugins: [react()],
 })
