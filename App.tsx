@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import Navigation from './components/Navigation';
 import RecordingView from './components/RecordingView';
 import CalendarModal from './components/CalendarModal';
@@ -14,7 +14,6 @@ const DEFAULT_PROFILE: BabyProfile = {
   gender: 'boy'
 };
 
-// --- Updated Demo Data (Stable URLs) ---
 const DEMO_ENTRIES: DiaryEntry[] = [
   {
     id: '2024-01-29', 
@@ -37,7 +36,7 @@ const DEMO_ENTRIES: DiaryEntry[] = [
     voiceNotes: [
        { id: 'v3', timestamp: '2024-01-27T09:10:00.000Z', transcript: "날씨가 좋아서 산책 나왔어. 초록색 나무들이 춤추는 거 보이지? 우리 아가도 기분이 좋은가 보네." }
     ],
-    babyContent: "내 눈앞에 거대한 초록색 거인이 나타났어요! 엄마는 그걸 '나무'라고 불렀지만, 나는 알아요. 그건 바람과 춤추는 요정들의 집이라는 걸요. \n\n수많은 초록 손바닥들이 나에게 인사를 건네며 사락사락 노래를 불렀어요. 나뭇잎 사이로 쏟아지는 햇살 조각들은 마치 반짝이는 가루 같아서 잡으려고 손을 뻗었지만, 어느새 내 뺨에 닿아 따뜻한 뽀뽀를 남기고 사라졌답니다. \n\n세상은 참 신기하고 아름다운 색깔들로 가득 차 있어요. 나는 오늘 초록색 친구와 가장 친해진 것 같아요.",
+    babyContent: "내 눈앞에 거대한 초록색 거인이 나타났어요! 엄마는 그걸 '나무'라고 불렀지만, 나는 알아요. 그건 바람과 춤추는 요정들의 집이라는 걸요. \n\n수많은 초록 손바닥들이 나를 향해 인사를 건네며 사락사락 노래를 불렀어요. 나뭇잎 사이로 쏟아지는 햇살 조각들은 마치 반짝이는 가루 같아서 잡으려고 손을 뻗었지만, 어느새 내 뺨에 닿아 따뜻한 뽀뽀를 남기고 사라졌답니다. \n\n세상은 참 신기하고 아름다운 색깔들로 가득 차 있어요. 나는 오늘 초록색 친구와 가장 친해진 것 같아요.",
     title: "초록 거인과의 만남",
     mood: 'calm',
     mainImageUrl: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=800&auto=format&fit=crop", // Green Forest
@@ -71,7 +70,7 @@ const calculateDays = (birthDate: string) => {
   const now = new Date();
   const diff = now.getTime() - start.getTime();
   const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-  return days + 1; // D+1 starts from birth date
+  return days + 1;
 };
 
 const formatDate = (dateString: string) => {
@@ -102,7 +101,6 @@ const formatTime = (isoString: string) => {
 
 // --- Sub-Components ---
 
-// 0. Toast Component
 const Toast: React.FC<{ message: string; visible: boolean }> = ({ message, visible }) => {
   return (
     <div className={`absolute bottom-28 left-1/2 transform -translate-x-1/2 z-[200] pointer-events-none transition-all duration-300 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
@@ -114,15 +112,12 @@ const Toast: React.FC<{ message: string; visible: boolean }> = ({ message, visib
   );
 };
 
-// 1. Clock Component
 const DigitalClock: React.FC = () => {
   const [time, setTime] = useState(new Date());
-
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
-
   return (
     <span className="text-white/90 text-sm font-medium tracking-wide">
       {time.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
@@ -136,11 +131,10 @@ const HomeView: React.FC<{
   dailyQuestion: DailyQuestion | null;
   loadingQuestion: boolean;
   hasEntryToday: boolean;
-  onOpenRecorder: () => void;
-  onOpenSettings: () => void;
+  onNavigate: (path: string) => void;
   bgImage: string | null;
   onBgSelect: (file: File) => void;
-}> = ({ profile, dailyQuestion, loadingQuestion, hasEntryToday, onOpenRecorder, onOpenSettings, bgImage, onBgSelect }) => {
+}> = ({ profile, dailyQuestion, loadingQuestion, hasEntryToday, onNavigate, bgImage, onBgSelect }) => {
   const days = calculateDays(profile.birthDate);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -152,50 +146,26 @@ const HomeView: React.FC<{
 
   const DEFAULT_BG = "https://images.unsplash.com/photo-1519689680058-324335c77eba?q=80&w=1200&auto=format&fit=crop"; 
   const currentBg = bgImage || DEFAULT_BG;
-
   const displayText = hasEntryToday
     ? "오늘도 이야기를 들려주어서 고마워,\n나한테 더 해주고 싶은 말이 있어?"
     : dailyQuestion?.text;
 
   return (
     <div className="relative h-full flex flex-col bg-stone-100">
-      <input 
-        type="file" 
-        ref={fileInputRef} 
-        onChange={handleFileChange} 
-        className="hidden" 
-        accept="image/*" 
-      />
-
+      <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" />
       <header className="absolute top-0 left-0 right-0 z-20 px-6 pt-safe pb-4 mt-8 flex justify-between items-start pointer-events-none">
-        <button 
-          onClick={onOpenSettings} 
-          className="flex flex-col items-start pointer-events-auto group"
-        >
-          <span className="text-rose-350 text-sm font-bold mb-0.5 tracking-tight group-hover:text-rose-200 transition-colors">
-            {profile.name}
-          </span>
-          <span className="text-3xl font-serif italic font-bold text-white tracking-tight text-shadow-sm group-hover:text-white/90 transition-colors">
-            D+{days}
-          </span>
+        <button onClick={() => onNavigate('settings')} className="flex flex-col items-start pointer-events-auto group">
+          <span className="text-rose-350 text-sm font-bold mb-0.5 tracking-tight group-hover:text-rose-200 transition-colors">{profile.name}</span>
+          <span className="text-3xl font-serif italic font-bold text-white tracking-tight text-shadow-sm group-hover:text-white/90 transition-colors">D+{days}</span>
         </button>
-
         <div className="flex items-center gap-3 mt-1 pointer-events-auto">
           <DigitalClock />
         </div>
       </header>
 
-      <div 
-        className="absolute top-0 left-0 w-full h-[75%] z-0 cursor-pointer group"
-        onClick={() => fileInputRef.current?.click()}
-      >
-        <img 
-          src={currentBg} 
-          alt="Baby mood" 
-          className="w-full h-full object-cover mask-image-b transition-opacity duration-300"
-        />
+      <div className="absolute top-0 left-0 w-full h-[75%] z-0 cursor-pointer group" onClick={() => fileInputRef.current?.click()}>
+        <img src={currentBg} alt="Baby mood" className="w-full h-full object-cover mask-image-b transition-opacity duration-300" />
         <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-stone-100"></div>
-        
         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/10 backdrop-blur-[1px]">
           <div className="bg-white/20 backdrop-blur-md px-4 py-2 rounded-full text-white text-sm font-medium flex items-center gap-2 border border-white/20">
             <ImageIcon size={16} />
@@ -210,21 +180,14 @@ const HomeView: React.FC<{
             <Sparkles size={14} fill="currentColor" className="text-rose-500" />
             <span className="text-[10px] font-extrabold tracking-widest uppercase opacity-100">Today's Question</span>
           </div>
-          
           <div className="min-h-[60px] flex items-center justify-center mb-4">
             {loadingQuestion ? (
               <Loader2 className="animate-spin text-stone-500" />
             ) : (
-              <p className="text-lg font-bold leading-relaxed text-center text-stone-900 break-keep drop-shadow-sm whitespace-pre-line">
-                {displayText}
-              </p>
+              <p className="text-lg font-bold leading-relaxed text-center text-stone-900 break-keep drop-shadow-sm whitespace-pre-line">{displayText}</p>
             )}
           </div>
-
-          <button 
-            onClick={onOpenRecorder}
-            className="w-full bg-[#2D2A26] text-white py-3.5 rounded-2xl font-bold text-base shadow-lg shadow-stone-800/20 hover:bg-black transition-all active:scale-[0.98] flex items-center justify-center gap-2"
-          >
+          <button onClick={() => onNavigate('record')} className="w-full bg-[#2D2A26] text-white py-3.5 rounded-2xl font-bold text-base shadow-lg shadow-stone-800/20 hover:bg-black transition-all active:scale-[0.98] flex items-center justify-center gap-2">
             <span>답장하기</span>
           </button>
         </div>
@@ -236,17 +199,11 @@ const HomeView: React.FC<{
 // 3. Storybook View
 const StorybookView: React.FC<{
   book: StoryBook;
-  onClose: () => void;
+  onNavigate: (path: string) => void;
   onRegenerate: () => void;
-  onOrder: () => void;
-}> = ({ book, onClose, onRegenerate, onOrder }) => {
+}> = ({ book, onNavigate, onRegenerate }) => {
   const [isPlaying, setIsPlaying] = useState(false);
-
-  useEffect(() => {
-    return () => {
-      window.speechSynthesis.cancel();
-    };
-  }, []);
+  useEffect(() => { return () => { window.speechSynthesis.cancel(); }; }, []);
 
   const togglePlay = () => {
     if (isPlaying) {
@@ -266,62 +223,38 @@ const StorybookView: React.FC<{
     <div className="absolute inset-0 z-[100] bg-[#FDFBF7] flex flex-col animate-fade-enter">
        <div className="flex-none px-6 pt-safe pb-2 flex items-center justify-between h-[52px] z-10 bg-[#FDFBF7]/90 backdrop-blur-sm sticky top-0">
           <div className="flex items-center gap-1 flex-1 min-w-0">
-              <button 
-                onClick={onClose} 
-                className="p-1 -ml-1 rounded-full hover:bg-stone-100 transition-colors text-stone-600 shrink-0"
-              >
+              <button onClick={() => onNavigate('diary')} className="p-1 -ml-1 rounded-full hover:bg-stone-100 transition-colors text-stone-600 shrink-0">
                 <ChevronLeft size={24} />
               </button>
               <h2 className="font-serif font-bold text-base text-ink truncate flex-1">{book.title}</h2>
           </div>
        </div>
-
        <div className="flex-1 overflow-y-auto no-scrollbar pb-10 bg-[#FDFBF7]">
           <div className="relative w-full aspect-[4/3] bg-stone-200 shadow-sm mb-6">
-             <img 
-                src={book.coverImage} 
-                alt="Book Cover" 
-                className="w-full h-full object-cover"
-             />
+             <img src={book.coverImage} alt="Book Cover" className="w-full h-full object-cover" />
              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
              <div className="absolute bottom-6 left-6 right-20 text-white">
-                 <h1 className="text-2xl font-serif font-bold leading-tight drop-shadow-lg">
-                     {book.title}
-                 </h1>
+                 <h1 className="text-2xl font-serif font-bold leading-tight drop-shadow-lg">{book.title}</h1>
              </div>
-             <button 
-                 onClick={(e) => { e.stopPropagation(); togglePlay(); }}
-                 className="absolute bottom-5 right-5 w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white border border-white/30 shadow-lg hover:bg-white/30 transition-all active:scale-95"
-             >
+             <button onClick={(e) => { e.stopPropagation(); togglePlay(); }} className="absolute bottom-5 right-5 w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white border border-white/30 shadow-lg hover:bg-white/30 transition-all active:scale-95">
                  {isPlaying ? <Pause size={18} fill="currentColor" /> : <Play size={18} fill="currentColor" className="ml-0.5" />}
              </button>
           </div>
-
           <div className="px-6 prose prose-stone max-w-none relative">
-             <p className="text-stone-700 leading-[1.8] text-[15px] font-serif text-justify whitespace-pre-line first-letter:text-4xl first-letter:font-serif first-letter:text-rose-400 first-letter:mr-2 first-letter:float-left">
-                 {book.content}
-             </p>
+             <p className="text-stone-700 leading-[1.8] text-[15px] font-serif text-justify whitespace-pre-line first-letter:text-4xl first-letter:font-serif first-letter:text-rose-400 first-letter:mr-2 first-letter:float-left">{book.content}</p>
           </div>
-          
           <div className="mt-12 flex items-center justify-center mb-8">
              <div className="w-16 h-[1px] bg-stone-300"></div>
              <div className="mx-3 text-stone-300 text-[10px] font-serif italic">The End</div>
              <div className="w-16 h-[1px] bg-stone-300"></div>
           </div>
        </div>
-
        <div className="flex-none p-6 bg-white border-t border-stone-100 flex gap-3 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] pb-safe">
-          <button 
-             onClick={onRegenerate}
-             className="flex-1 py-4 rounded-xl border border-stone-200 flex items-center justify-center gap-2 text-stone-600 font-bold text-sm hover:bg-stone-50 transition-colors"
-          >
+          <button onClick={onRegenerate} className="flex-1 py-4 rounded-xl border border-stone-200 flex items-center justify-center gap-2 text-stone-600 font-bold text-sm hover:bg-stone-50 transition-colors">
              <RefreshCw size={18} />
              <span>다시 만들기</span>
           </button>
-          <button 
-             onClick={onOrder}
-             className="flex-[2] py-4 rounded-xl bg-[#2D2A26] hover:bg-black text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg transition-colors"
-          >
+          <button onClick={() => onNavigate('order')} className="flex-[2] py-4 rounded-xl bg-[#2D2A26] hover:bg-black text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg transition-colors">
              <span>동화책 주문하기</span>
              <ArrowRight size={18} />
           </button>
@@ -334,12 +267,11 @@ const StorybookView: React.FC<{
 const OrderView: React.FC<{
   book: StoryBook;
   entries: DiaryEntry[];
-  onClose: () => void;
+  onNavigate: (path: string) => void;
   onConfirmOrder: () => void;
-}> = ({ book, entries, onClose, onConfirmOrder }) => {
+}> = ({ book, entries, onNavigate, onConfirmOrder }) => {
   const [coverType, setCoverType] = useState<'hard' | 'soft'>('hard');
   const [paperType, setPaperType] = useState('rendezvous');
-
   const papers = [
       { id: 'rendezvous', name: '랑데부 190g (고급지)', desc: '표면 감촉이 부드럽고 잉크 발색이 탁월' },
       { id: 'montblanc', name: '몽블랑 160g (내추럴)', desc: '종이 본연의 결이 살아있는 따뜻한 질감' },
@@ -349,7 +281,7 @@ const OrderView: React.FC<{
   return (
     <div className="absolute inset-0 z-[120] bg-[#F7F7F5] flex flex-col animate-fade-enter font-sans">
       <div className="flex-none px-6 pt-safe h-14 flex items-center justify-center relative bg-[#F7F7F5] z-10">
-        <button onClick={onClose} className="absolute left-6 p-2 -ml-2 text-stone-600">
+        <button onClick={() => onNavigate('storybook')} className="absolute left-6 p-2 -ml-2 text-stone-600">
            <ChevronLeft size={24} />
         </button>
         <h1 className="text-base font-bold text-stone-800">동화책 만들기</h1>
@@ -386,70 +318,42 @@ const OrderView: React.FC<{
                 ))}
             </div>
         </div>
-
         <div className="mb-8">
             <h3 className="font-bold text-stone-800 mb-3">커버 종류</h3>
             <div className="flex gap-3">
-                <button 
-                    onClick={() => setCoverType('hard')}
-                    className={`flex-1 p-4 rounded-2xl border-2 text-left relative transition-all ${coverType === 'hard' ? 'border-[#F4B942] bg-[#FFFCF5]' : 'border-transparent bg-white'}`}
-                >
+                <button onClick={() => setCoverType('hard')} className={`flex-1 p-4 rounded-2xl border-2 text-left relative transition-all ${coverType === 'hard' ? 'border-[#F4B942] bg-[#FFFCF5]' : 'border-transparent bg-white'}`}>
                     <div className="flex justify-between items-start mb-2">
                         <span className="font-bold text-stone-800 text-sm">하드커버</span>
-                        {coverType === 'hard' ? (
-                            <div className="w-5 h-5 rounded-full border-[5px] border-[#F4B942] bg-white shrink-0"></div>
-                        ) : (
-                            <div className="w-5 h-5 rounded-full border-2 border-stone-200 bg-transparent shrink-0"></div>
-                        )}
+                        {coverType === 'hard' ? <div className="w-5 h-5 rounded-full border-[5px] border-[#F4B942] bg-white shrink-0"></div> : <div className="w-5 h-5 rounded-full border-2 border-stone-200 bg-transparent shrink-0"></div>}
                     </div>
                     <p className="text-[10px] text-stone-500 leading-relaxed break-keep">오랫동안 간직해 주는 튼튼한 고급 양장 제본</p>
                 </button>
-                <button 
-                    onClick={() => setCoverType('soft')}
-                    className={`flex-1 p-4 rounded-2xl border-2 text-left relative transition-all ${coverType === 'soft' ? 'border-[#F4B942] bg-[#FFFCF5]' : 'border-transparent bg-white'}`}
-                >
+                <button onClick={() => setCoverType('soft')} className={`flex-1 p-4 rounded-2xl border-2 text-left relative transition-all ${coverType === 'soft' ? 'border-[#F4B942] bg-[#FFFCF5]' : 'border-transparent bg-white'}`}>
                     <div className="flex justify-between items-start mb-2">
                         <span className="font-bold text-stone-800 text-sm">소프트커버</span>
-                        {coverType === 'soft' ? (
-                            <div className="w-5 h-5 rounded-full border-[5px] border-[#F4B942] bg-white shrink-0"></div>
-                        ) : (
-                            <div className="w-5 h-5 rounded-full border-2 border-stone-200 bg-transparent shrink-0"></div>
-                        )}
+                        {coverType === 'soft' ? <div className="w-5 h-5 rounded-full border-[5px] border-[#F4B942] bg-white shrink-0"></div> : <div className="w-5 h-5 rounded-full border-2 border-stone-200 bg-transparent shrink-0"></div>}
                     </div>
                     <p className="text-[10px] text-stone-500 leading-relaxed break-keep">가볍고 부드러운 PUR 무선 제본</p>
                 </button>
             </div>
         </div>
-
         <div className="mb-8">
              <h3 className="font-bold text-stone-800 mb-3">종이 재질</h3>
              <div className="space-y-3">
                  {papers.map((paper) => (
-                     <button
-                        key={paper.id}
-                        onClick={() => setPaperType(paper.id)}
-                        className={`w-full p-4 rounded-2xl flex items-center justify-between border-2 transition-all ${paperType === paper.id ? 'border-[#F4B942] bg-[#FFFCF5]' : 'border-transparent bg-white'}`}
-                     >
+                     <button key={paper.id} onClick={() => setPaperType(paper.id)} className={`w-full p-4 rounded-2xl flex items-center justify-between border-2 transition-all ${paperType === paper.id ? 'border-[#F4B942] bg-[#FFFCF5]' : 'border-transparent bg-white'}`}>
                         <div className="text-left">
                             <p className="text-sm font-bold text-stone-800">{paper.name}</p>
                             <p className="text-[10px] text-stone-400">{paper.desc}</p>
                         </div>
-                        {paperType === paper.id ? (
-                            <div className="w-5 h-5 rounded-full border-[5px] border-[#F4B942] bg-white"></div>
-                        ) : (
-                            <div className="w-5 h-5 rounded-full border-2 border-stone-200 bg-transparent"></div>
-                        )}
+                        {paperType === paper.id ? <div className="w-5 h-5 rounded-full border-[5px] border-[#F4B942] bg-white"></div> : <div className="w-5 h-5 rounded-full border-2 border-stone-200 bg-transparent"></div>}
                      </button>
                  ))}
              </div>
         </div>
       </div>
-
       <div className="flex-none p-6 pb-safe pt-2 bg-gradient-to-t from-[#F7F7F5] to-[#F7F7F5]/0">
-          <button 
-            className="w-full bg-[#2D2A26] text-white py-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg active:scale-[0.98] transition-transform"
-            onClick={onConfirmOrder}
-          >
+          <button className="w-full bg-[#2D2A26] text-white py-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg active:scale-[0.98] transition-transform" onClick={onConfirmOrder}>
               <span>동화책 주문하기</span>
               <ArrowRight size={16} />
           </button>
@@ -464,39 +368,45 @@ const DiaryView: React.FC<{
     loading: boolean, 
     onAddGalleryImage: (entryId: string, file: File) => void,
     onCreateBook: () => void,
-    bookOrderStatus: 'idle' | 'processing'
-}> = ({ entries, loading, onAddGalleryImage, onCreateBook, bookOrderStatus }) => {
-  const [viewMode, setViewMode] = useState<'single' | 'grid'>('single');
-  const [currentIndex, setCurrentIndex] = useState(0);
+    bookOrderStatus: 'idle' | 'processing',
+    onNavigate: (path: string) => void,
+    viewMode: 'single' | 'grid',
+    selectedEntryId: string | null
+}> = ({ entries, loading, onAddGalleryImage, onCreateBook, bookOrderStatus, onNavigate, viewMode, selectedEntryId }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const galleryInputRef = useRef<HTMLInputElement>(null);
 
-  const filteredEntries = entries.filter(entry => 
+  const filteredEntries = useMemo(() => entries.filter(entry => 
     entry.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
     entry.babyContent.toLowerCase().includes(searchQuery.toLowerCase()) ||
     entry.date.includes(searchQuery)
-  );
+  ), [entries, searchQuery]);
 
   const displayEntries = viewMode === 'grid' ? filteredEntries : entries;
 
+  // Determine current index based on selectedEntryId from URL, default to 0
+  const currentIndex = useMemo(() => {
+    if (!selectedEntryId) return 0;
+    const idx = displayEntries.findIndex(e => e.id === selectedEntryId);
+    return idx !== -1 ? idx : 0;
+  }, [selectedEntryId, displayEntries]);
+
   const handlePrevDay = () => {
     if (currentIndex < displayEntries.length - 1) {
-      setCurrentIndex(prev => prev + 1);
+       const nextId = displayEntries[currentIndex + 1].id;
+       onNavigate(`diary/entry/${nextId}`);
     }
   };
 
   const handleNextDay = () => {
     if (currentIndex > 0) {
-      setCurrentIndex(prev => prev - 1);
+       const prevId = displayEntries[currentIndex - 1].id;
+       onNavigate(`diary/entry/${prevId}`);
     }
   };
 
   const handleGridClick = (entryId: string) => {
-    const index = entries.findIndex(e => e.id === entryId);
-    if (index !== -1) {
-        setCurrentIndex(index);
-        setViewMode('single');
-    }
+    onNavigate(`diary/entry/${entryId}`);
   };
 
   const handleGalleryUpload = (e: React.ChangeEvent<HTMLInputElement>, entryId: string) => {
@@ -543,13 +453,13 @@ const DiaryView: React.FC<{
         
         <div className="bg-white p-1 rounded-2xl flex items-center shadow-sm border border-stone-100 shrink-0 h-[42px]">
           <button 
-            onClick={() => setViewMode('single')}
+            onClick={() => onNavigate(selectedEntryId ? `diary/entry/${selectedEntryId}` : 'diary')}
             className={`w-9 h-full rounded-xl flex items-center justify-center transition-all ${viewMode === 'single' ? 'bg-rose-100 text-rose-500' : 'text-stone-300 hover:text-stone-400'}`}
           >
             <BookOpen size={18} />
           </button>
           <button 
-            onClick={() => setViewMode('grid')}
+            onClick={() => onNavigate('diary/grid')}
             className={`w-9 h-full rounded-xl flex items-center justify-center transition-all ${viewMode === 'grid' ? 'bg-rose-100 text-rose-500' : 'text-stone-300 hover:text-stone-400'}`}
           >
             <LayoutGrid size={18} />
@@ -602,11 +512,7 @@ const DiaryView: React.FC<{
 
                 <div className="bg-white p-3 rounded-[2.5rem] shadow-[0_10px_40px_-15px_rgba(0,0,0,0.1)] border border-stone-50 mb-8 animate-fade-enter">
                     <div className="relative aspect-square rounded-[2rem] overflow-hidden bg-stone-100">
-                        <img 
-                            src={displayEntries[currentIndex].mainImageUrl} 
-                            alt="Diary cover" 
-                            className="w-full h-full object-cover"
-                        />
+                        <img src={displayEntries[currentIndex].mainImageUrl} alt="Diary cover" className="w-full h-full object-cover" />
                         <div className="absolute bottom-4 right-4 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm">
                             <Heart size={10} className="text-rose-400 fill-rose-400" />
                             <span className="text-[10px] font-bold text-stone-500 tracking-tight">{formatDateShort(displayEntries[currentIndex].date)} 기록</span>
@@ -636,9 +542,7 @@ const DiaryView: React.FC<{
                                         <Clock size={10} />
                                         {formatTime(note.timestamp)}
                                     </span>
-                                    <p className="text-stone-600 text-sm leading-6">
-                                        "{note.transcript}"
-                                    </p>
+                                    <p className="text-stone-600 text-sm leading-6">"{note.transcript}"</p>
                                 </div>
                             ))
                         ) : (
@@ -655,21 +559,11 @@ const DiaryView: React.FC<{
                     </div>
                     
                     <div className="grid grid-cols-2 gap-4">
-                        <button 
-                            onClick={() => galleryInputRef.current?.click()}
-                            className="aspect-square rounded-[1.5rem] bg-white border-2 border-dashed border-stone-100 flex flex-col items-center justify-center text-stone-300 hover:border-rose-200 hover:text-rose-300 transition-all hover:bg-rose-50/50"
-                        >
+                        <button onClick={() => galleryInputRef.current?.click()} className="aspect-square rounded-[1.5rem] bg-white border-2 border-dashed border-stone-100 flex flex-col items-center justify-center text-stone-300 hover:border-rose-200 hover:text-rose-300 transition-all hover:bg-rose-50/50">
                             <Plus size={24} strokeWidth={1.5} />
                             <span className="text-[10px] font-bold mt-2 tracking-widest">ADD PHOTO</span>
                         </button>
-                        <input 
-                            type="file" 
-                            ref={galleryInputRef} 
-                            onChange={(e) => handleGalleryUpload(e, displayEntries[currentIndex].id)} 
-                            className="hidden" 
-                            accept="image/*" 
-                        />
-
+                        <input type="file" ref={galleryInputRef} onChange={(e) => handleGalleryUpload(e, displayEntries[currentIndex].id)} className="hidden" accept="image/*" />
                         {displayEntries[currentIndex].gallery.map((imgUrl, idx) => (
                             <div key={idx} className="aspect-square rounded-[1.5rem] overflow-hidden bg-white shadow-sm border border-stone-50">
                                 <img src={imgUrl} alt={`Gallery ${idx}`} className="w-full h-full object-cover" />
@@ -684,40 +578,22 @@ const DiaryView: React.FC<{
                 <div className="flex-1 overflow-y-auto no-scrollbar px-6 pt-4 animate-fade-enter">
                   <div className="grid grid-cols-2 gap-4 pb-24">
                       {displayEntries.map((entry) => (
-                        <button 
-                          key={entry.id} 
-                          onClick={() => handleGridClick(entry.id)}
-                          className="bg-white rounded-[1.8rem] p-3 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.08)] border border-stone-50 flex flex-col gap-3 group text-left transition-transform active:scale-95"
-                        >
+                        <button key={entry.id} onClick={() => handleGridClick(entry.id)} className="bg-white rounded-[1.8rem] p-3 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.08)] border border-stone-50 flex flex-col gap-3 group text-left transition-transform active:scale-95">
                           <div className="relative aspect-square w-full rounded-[1.4rem] overflow-hidden bg-stone-100">
-                            <img 
-                              src={entry.mainImageUrl} 
-                              alt={entry.title} 
-                              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
-                            />
+                            <img src={entry.mainImageUrl} alt={entry.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
                             <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-full shadow-sm">
                                 <span className="text-[10px] font-bold text-stone-600 tracking-tight">{formatDateDot(entry.date)}</span>
                             </div>
                           </div>
-                          
                           <div className="px-1 pb-1">
-                            <h4 className="text-[13px] font-bold text-[#2D2A26] leading-snug line-clamp-1 mb-1.5">
-                                {entry.title}
-                            </h4>
-                            <p className="text-[11px] text-[#9CA3AF] line-clamp-2 leading-relaxed font-medium">
-                                {entry.babyContent}
-                            </p>
+                            <h4 className="text-[13px] font-bold text-[#2D2A26] leading-snug line-clamp-1 mb-1.5">{entry.title}</h4>
+                            <p className="text-[11px] text-[#9CA3AF] line-clamp-2 leading-relaxed font-medium">{entry.babyContent}</p>
                           </div>
                         </button>
                       ))}
                   </div>
                 </div>
-
-                <button 
-                    disabled={bookOrderStatus === 'processing'}
-                    onClick={bookOrderStatus === 'processing' ? undefined : onCreateBook}
-                    className={`absolute bottom-28 right-6 text-white pl-5 pr-6 py-3.5 rounded-full shadow-[0_8px_30px_rgb(251,113,133,0.4)] flex items-center gap-2.5 z-30 transition-transform active:scale-95 hover:shadow-lg animate-fade-in border border-white/20 ${bookOrderStatus === 'processing' ? 'bg-stone-400 cursor-not-allowed shadow-none' : 'bg-gradient-to-r from-rose-400 to-rose-500'}`}
-                >
+                <button disabled={bookOrderStatus === 'processing'} onClick={bookOrderStatus === 'processing' ? undefined : onCreateBook} className={`absolute bottom-28 right-6 text-white pl-5 pr-6 py-3.5 rounded-full shadow-[0_8px_30px_rgb(251,113,133,0.4)] flex items-center gap-2.5 z-30 transition-transform active:scale-95 hover:shadow-lg animate-fade-in border border-white/20 ${bookOrderStatus === 'processing' ? 'bg-stone-400 cursor-not-allowed shadow-none' : 'bg-gradient-to-r from-rose-400 to-rose-500'}`}>
                     <Wand2 size={20} className="text-white" />
                     <span className="font-bold text-sm tracking-wide">{bookOrderStatus === 'processing' ? '동화책 제작중' : '동화책 만들기'}</span>
                 </button>
@@ -733,10 +609,9 @@ const DiaryView: React.FC<{
 const ProfileView: React.FC<{ 
   profile: BabyProfile; 
   setProfile: (p: BabyProfile) => void;
-  onBack: () => void;
-}> = ({ profile, setProfile, onBack }) => {
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
-
+  onNavigate: (path: string) => void;
+  isCalendarOpen: boolean;
+}> = ({ profile, setProfile, onNavigate, isCalendarOpen }) => {
   const handleDateSelect = (date: string) => {
     setProfile({ ...profile, birthDate: date });
   };
@@ -744,7 +619,7 @@ const ProfileView: React.FC<{
   return (
     <div className="h-full px-6 pt-safe bg-white z-50 absolute inset-0 animate-fade-enter">
       <div className="flex items-center gap-4 mb-8 mt-8">
-         <button onClick={onBack} className="p-2 -ml-2 hover:bg-stone-100 rounded-full">
+         <button onClick={() => onNavigate('home')} className="p-2 -ml-2 hover:bg-stone-100 rounded-full">
             <ChevronLeft size={24} />
          </button>
          <h1 className="text-2xl font-bold text-ink">설정</h1>
@@ -753,37 +628,17 @@ const ProfileView: React.FC<{
       <div className="space-y-8">
         <div className="space-y-2">
           <label className="block text-sm font-bold text-stone-500">아기 이름 (태명)</label>
-          <input 
-            type="text" 
-            value={profile.name}
-            onChange={(e) => setProfile({...profile, name: e.target.value})}
-            className="w-full text-xl font-bold border-b-2 border-stone-100 py-3 focus:outline-none focus:border-rose-400 bg-transparent transition-colors placeholder-stone-200"
-            placeholder="이름을 입력하세요"
-          />
+          <input type="text" value={profile.name} onChange={(e) => setProfile({...profile, name: e.target.value})} className="w-full text-xl font-bold border-b-2 border-stone-100 py-3 focus:outline-none focus:border-rose-400 bg-transparent transition-colors placeholder-stone-200" placeholder="이름을 입력하세요" />
         </div>
 
         <div className="space-y-3">
           <label className="block text-sm font-bold text-stone-500">성별</label>
           <div className="flex gap-4">
-            <button 
-                onClick={() => setProfile({...profile, gender: 'boy'})}
-                className={`flex-1 py-4 rounded-2xl border-2 flex flex-col items-center justify-center gap-2 transition-all ${
-                    profile.gender === 'boy' 
-                    ? 'border-blue-200 bg-blue-50 text-blue-500 shadow-sm' 
-                    : 'border-stone-50 bg-stone-50 text-stone-300 hover:border-blue-100'
-                }`}
-            >
+            <button onClick={() => setProfile({...profile, gender: 'boy'})} className={`flex-1 py-4 rounded-2xl border-2 flex flex-col items-center justify-center gap-2 transition-all ${profile.gender === 'boy' ? 'border-blue-200 bg-blue-50 text-blue-500 shadow-sm' : 'border-stone-50 bg-stone-50 text-stone-300 hover:border-blue-100'}`}>
                 <Crown size={24} fill={profile.gender === 'boy' ? 'currentColor' : 'none'} />
                 <span className="text-sm font-bold">왕자님</span>
             </button>
-            <button 
-                onClick={() => setProfile({...profile, gender: 'girl'})}
-                className={`flex-1 py-4 rounded-2xl border-2 flex flex-col items-center justify-center gap-2 transition-all ${
-                    profile.gender === 'girl' 
-                    ? 'border-rose-200 bg-rose-50 text-rose-500 shadow-sm' 
-                    : 'border-stone-50 bg-stone-50 text-stone-300 hover:border-rose-100'
-                }`}
-            >
+            <button onClick={() => setProfile({...profile, gender: 'girl'})} className={`flex-1 py-4 rounded-2xl border-2 flex flex-col items-center justify-center gap-2 transition-all ${profile.gender === 'girl' ? 'border-rose-200 bg-rose-50 text-rose-500 shadow-sm' : 'border-stone-50 bg-stone-50 text-stone-300 hover:border-rose-100'}`}>
                 <Crown size={24} fill={profile.gender === 'girl' ? 'currentColor' : 'none'} />
                 <span className="text-sm font-bold">공주님</span>
             </button>
@@ -792,10 +647,7 @@ const ProfileView: React.FC<{
 
         <div className="space-y-2">
           <label className="block text-sm font-bold text-stone-500">태어난 날</label>
-          <div 
-             onClick={() => setIsCalendarOpen(true)}
-             className="w-full flex items-center justify-between border-b-2 border-stone-100 py-3 cursor-pointer hover:border-rose-400 transition-colors group"
-          >
+          <div onClick={() => onNavigate('settings/calendar')} className="w-full flex items-center justify-between border-b-2 border-stone-100 py-3 cursor-pointer hover:border-rose-400 transition-colors group">
              <span className="text-xl font-medium text-ink">{profile.birthDate}</span>
              <CalendarIcon size={20} className="text-stone-300 group-hover:text-rose-400" />
           </div>
@@ -803,9 +655,7 @@ const ProfileView: React.FC<{
 
         <div className="pt-8">
            <div className="bg-stone-50 rounded-2xl p-6 flex items-center gap-5 border border-stone-100">
-              <div className="w-12 h-12 rounded-full bg-rose-100 text-rose-500 flex items-center justify-center font-bold text-lg">
-                D
-              </div>
+              <div className="w-12 h-12 rounded-full bg-rose-100 text-rose-500 flex items-center justify-center font-bold text-lg">D</div>
               <div>
                 <p className="text-lg font-bold text-stone-800">D+{calculateDays(profile.birthDate)}</p>
                 <p className="text-sm text-stone-500 font-medium">우리 {profile.name} {profile.gender === 'boy' ? '왕자' : '공주'}님과 함께한 시간</p>
@@ -815,11 +665,7 @@ const ProfileView: React.FC<{
       </div>
 
       {isCalendarOpen && (
-        <CalendarModal 
-          currentDate={profile.birthDate} 
-          onSelect={handleDateSelect} 
-          onClose={() => setIsCalendarOpen(false)} 
-        />
+        <CalendarModal currentDate={profile.birthDate} onSelect={handleDateSelect} onClose={() => onNavigate('settings')} />
       )}
     </div>
   );
@@ -828,8 +674,39 @@ const ProfileView: React.FC<{
 // --- Main App Component ---
 
 const App: React.FC = () => {
-  // Navigation State
-  const [currentView, setCurrentView] = useState<'home' | 'diary' | 'record' | 'settings' | 'storybook' | 'order'>('home');
+  // Robust Hash Parsing for Routing
+  const parseHash = () => {
+    if (typeof window === 'undefined') return { main: 'home', sub: '', param: '' };
+    const hash = window.location.hash.replace('#/', '');
+    const parts = hash.split('/');
+    return {
+      main: parts[0] || 'home',
+      sub: parts[1] || '',
+      param: parts[2] || ''
+    };
+  };
+
+  const [route, setRoute] = useState(parseHash());
+
+  useEffect(() => {
+    const handleHashChange = () => setRoute(parseHash());
+    window.addEventListener('hashchange', handleHashChange);
+    // Initial sync
+    if (!window.location.hash) {
+       window.location.hash = '/home';
+    }
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  const navigate = (path: string) => {
+    window.location.hash = `/${path}`;
+  };
+
+  // Derived routing states
+  const currentView = route.main;
+  const diaryViewMode = (currentView === 'diary' && route.sub === 'grid') ? 'grid' : 'single';
+  const diarySelectedEntryId = (currentView === 'diary' && route.sub === 'entry') ? route.param : null;
+  const isSettingsCalendarOpen = (currentView === 'settings' && route.sub === 'calendar');
 
   const [profile, setProfile] = useState<BabyProfile>(DEFAULT_PROFILE);
   const [entries, setEntries] = useState<DiaryEntry[]>([]);
@@ -837,14 +714,10 @@ const App: React.FC = () => {
   
   const [dailyQuestion, setDailyQuestion] = useState<DailyQuestion | null>(null);
   const [loadingQuestion, setLoadingQuestion] = useState(false);
-
   const [processingDiary, setProcessingDiary] = useState(false);
-
   const [storyBook, setStoryBook] = useState<StoryBook | null>(null);
   const [isGeneratingBook, setIsGeneratingBook] = useState(false);
-  
   const [bookOrderStatus, setBookOrderStatus] = useState<'idle' | 'processing'>('idle');
-
   const [toast, setToast] = useState<{message: string; visible: boolean}>({message: '', visible: false});
 
   const todayId = new Date().toLocaleDateString('en-CA');
@@ -856,20 +729,11 @@ const App: React.FC = () => {
             const savedProfile = await storage.loadProfile();
             const savedEntries = await storage.loadEntries();
             const savedBg = await storage.loadBgImage();
-
             if (savedProfile) setProfile(savedProfile);
-            
-            if (savedEntries && savedEntries.length > 0) {
-                setEntries(savedEntries);
-            } else {
-                setEntries(DEMO_ENTRIES);
-            }
-
+            if (savedEntries && savedEntries.length > 0) setEntries(savedEntries);
+            else setEntries(DEMO_ENTRIES);
             if (savedBg) setHomeBgImage(savedBg);
-        } catch (e) {
-            console.error("Failed to load initial data", e);
-            setEntries(DEMO_ENTRIES);
-        }
+        } catch (e) { console.error("Failed to load initial data", e); setEntries(DEMO_ENTRIES); }
     };
     initData();
   }, []);
@@ -878,28 +742,17 @@ const App: React.FC = () => {
     const init = async () => {
       const todayStr = new Date().toLocaleDateString('en-CA');
       const savedQuestion = await storage.loadDailyQuestion();
-      
-      if (savedQuestion && savedQuestion.date === todayStr) {
-        setDailyQuestion(savedQuestion);
-        return;
-      }
+      if (savedQuestion && savedQuestion.date === todayStr) { setDailyQuestion(savedQuestion); return; }
 
       setLoadingQuestion(true);
       const weeks = calculateWeeks(profile.birthDate);
       const q = await generateDailyQuestion(profile.name, weeks);
-      
-      const newQuestion: DailyQuestion = { 
-        id: Date.now().toString(), 
-        text: q.text, 
-        theme: q.theme,
-        date: todayStr 
-      };
+      const newQuestion: DailyQuestion = { id: Date.now().toString(), text: q.text, theme: q.theme, date: todayStr };
 
       setDailyQuestion(newQuestion);
       await storage.saveDailyQuestion(newQuestion);
       setLoadingQuestion(false);
     };
-
     init();
   }, [profile.name, profile.birthDate]);
 
@@ -925,14 +778,10 @@ const App: React.FC = () => {
     reader.onload = async (e) => {
       if (e.target?.result) {
         const dataUrl = e.target.result as string;
-        
         const updatedEntries = entries.map(entry => {
-            if (entry.id === entryId) {
-                return { ...entry, gallery: [...entry.gallery, dataUrl] };
-            }
+            if (entry.id === entryId) return { ...entry, gallery: [...entry.gallery, dataUrl] };
             return entry;
         });
-        
         setEntries(updatedEntries);
         await storage.saveEntries(updatedEntries);
       }
@@ -941,65 +790,35 @@ const App: React.FC = () => {
   };
 
   const handleRecordingConfirm = async (transcript: string) => {
-    setCurrentView('diary');
+    // Optimistic UI update: navigate immediately to diary view for the new entry
+    const todayId = new Date().toLocaleDateString('en-CA');
+    navigate(`diary/entry/${todayId}`);
     setProcessingDiary(true);
 
     try {
-      const todayId = new Date().toLocaleDateString('en-CA');
       const nowIso = new Date().toISOString();
       const weeks = calculateWeeks(profile.birthDate);
-      
       const existingEntryIndex = entries.findIndex(e => e.id === todayId);
       const existingEntry = existingEntryIndex !== -1 ? entries[existingEntryIndex] : null;
 
-      const newVoiceNote: VoiceNote = {
-          id: Date.now().toString(),
-          timestamp: nowIso,
-          transcript: transcript
-      };
-
+      const newVoiceNote: VoiceNote = { id: Date.now().toString(), timestamp: nowIso, transcript: transcript };
       const previousTranscripts = existingEntry ? existingEntry.voiceNotes.map(v => v.transcript) : [];
       const allTranscripts = [...previousTranscripts, transcript];
       const combinedText = allTranscripts.join('\n\n');
 
       const generated = await transformToBabyPerspective(combinedText, profile.name, weeks);
-      
       const textContent = generated.babyContent || "무슨 말을 했는지 잘 모르겠지만, 사랑한다는 건 알아요.";
       const mood = (generated.mood as any) || 'happy';
-      
       const illustrationUrl = await generateDiaryIllustration(textContent, mood);
       
       let updatedEntries = [...entries];
-
       if (existingEntry) {
-          const updatedEntry: DiaryEntry = {
-              ...existingEntry,
-              babyContent: textContent,
-              title: generated.title || existingEntry.title,
-              mood: mood,
-              voiceNotes: [...existingEntry.voiceNotes, newVoiceNote],
-              gallery: [...existingEntry.gallery, illustrationUrl],
-              mainImageUrl: illustrationUrl
-          };
-          updatedEntries[existingEntryIndex] = updatedEntry;
+          updatedEntries[existingEntryIndex] = { ...existingEntry, babyContent: textContent, title: generated.title || existingEntry.title, mood: mood, voiceNotes: [...existingEntry.voiceNotes, newVoiceNote], gallery: [...existingEntry.gallery, illustrationUrl], mainImageUrl: illustrationUrl };
       } else {
-          const newEntry: DiaryEntry = {
-            id: todayId,
-            date: nowIso,
-            babyAgeWeeks: weeks,
-            voiceNotes: [newVoiceNote],
-            babyContent: textContent,
-            title: generated.title || "사랑의 기록",
-            mood: mood,
-            mainImageUrl: illustrationUrl,
-            gallery: [illustrationUrl]
-          };
-          updatedEntries = [newEntry, ...entries];
+          updatedEntries = [{ id: todayId, date: nowIso, babyAgeWeeks: weeks, voiceNotes: [newVoiceNote], babyContent: textContent, title: generated.title || "사랑의 기록", mood: mood, mainImageUrl: illustrationUrl, gallery: [illustrationUrl] }, ...entries];
       }
-
       setEntries(updatedEntries);
       await storage.saveEntries(updatedEntries);
-
     } catch (e) {
       console.error(e);
       alert("일기를 생성하는 도중 오류가 발생했습니다.");
@@ -1014,92 +833,39 @@ const App: React.FC = () => {
     try {
        const book = await generateMonthlyStorybook(entries, profile.name, profile.gender);
        setStoryBook(book);
-       setCurrentView('storybook');
-    } catch (e) {
-       console.error(e);
-       alert("동화책 생성 중 오류가 발생했습니다.");
-    } finally {
-       setIsGeneratingBook(false);
-    }
+       navigate('storybook');
+    } catch (e) { console.error(e); alert("동화책 생성 중 오류가 발생했습니다."); } finally { setIsGeneratingBook(false); }
   };
 
   const showToast = (message: string) => {
     setToast({ message, visible: true });
-    setTimeout(() => {
-      setToast(prev => ({ ...prev, visible: false }));
-    }, 3000);
+    setTimeout(() => { setToast(prev => ({ ...prev, visible: false })); }, 3000);
   };
 
   const handleOrderConfirm = () => {
     setBookOrderStatus('processing');
-    setCurrentView('diary');
+    navigate('diary');
     setStoryBook(null);
     showToast("동화책 주문이 완료되었습니다.");
   };
 
-  // Determine which tab is active for the navigation bar
   const activeTab = currentView === 'diary' ? 'diary' : 'home';
   const showNavigation = ['home', 'diary'].includes(currentView);
 
   const renderContent = () => {
     switch (currentView) {
       case 'home':
-        return (
-          <HomeView 
-            profile={profile}
-            dailyQuestion={dailyQuestion}
-            loadingQuestion={loadingQuestion}
-            hasEntryToday={hasEntryToday}
-            onOpenRecorder={() => setCurrentView('record')}
-            onOpenSettings={() => setCurrentView('settings')}
-            bgImage={homeBgImage}
-            onBgSelect={handleBgSelect}
-          />
-        );
+        return <HomeView profile={profile} dailyQuestion={dailyQuestion} loadingQuestion={loadingQuestion} hasEntryToday={hasEntryToday} onNavigate={navigate} bgImage={homeBgImage} onBgSelect={handleBgSelect} />;
       case 'diary':
-        return (
-          <DiaryView 
-            entries={entries} 
-            loading={processingDiary} 
-            onAddGalleryImage={handleAddGalleryImage}
-            onCreateBook={handleCreateBook}
-            bookOrderStatus={bookOrderStatus}
-          />
-        );
+        return <DiaryView entries={entries} loading={processingDiary} onAddGalleryImage={handleAddGalleryImage} onCreateBook={handleCreateBook} bookOrderStatus={bookOrderStatus} onNavigate={navigate} viewMode={diaryViewMode} selectedEntryId={diarySelectedEntryId} />;
       case 'settings':
-        return (
-           <ProfileView 
-              profile={profile} 
-              setProfile={handleProfileUpdate} 
-              onBack={() => setCurrentView('home')}
-           />
-        );
+        return <ProfileView profile={profile} setProfile={handleProfileUpdate} onNavigate={navigate} isCalendarOpen={isSettingsCalendarOpen} />;
       case 'record':
-        return dailyQuestion ? (
-            <RecordingView 
-              question={hasEntryToday ? "오늘도 이야기를 들려주어서 고마워, 나한테 더 해주고 싶은 말이 있어?" : dailyQuestion.text}
-              onConfirm={handleRecordingConfirm}
-              onCancel={() => setCurrentView('home')}
-            />
-          ) : null;
+        return dailyQuestion ? <RecordingView question={hasEntryToday ? "오늘도 이야기를 들려주어서 고마워, 나한테 더 해주고 싶은 말이 있어?" : dailyQuestion.text} onConfirm={handleRecordingConfirm} onCancel={() => navigate('home')} /> : null;
       case 'storybook':
-        return storyBook ? (
-             <StorybookView 
-                book={storyBook} 
-                onClose={() => setCurrentView('diary')}
-                onRegenerate={handleCreateBook}
-                onOrder={() => setCurrentView('order')}
-             />
-           ) : null;
+        return storyBook ? <StorybookView book={storyBook} onNavigate={navigate} onRegenerate={handleCreateBook} /> : null;
       case 'order':
-        return storyBook ? (
-            <OrderView 
-              book={storyBook}
-              entries={entries}
-              onClose={() => setCurrentView('storybook')}
-              onConfirmOrder={handleOrderConfirm}
-            />
-           ) : null;
+        return storyBook ? <OrderView book={storyBook} entries={entries} onNavigate={navigate} onConfirmOrder={handleOrderConfirm} /> : null;
       default:
         return null;
     }
@@ -1108,12 +874,8 @@ const App: React.FC = () => {
   return (
     <div className="flex justify-center bg-stone-200 min-h-screen font-sans">
       <div className="w-full max-w-md bg-white h-[100dvh] relative shadow-2xl overflow-hidden flex flex-col">
-        
         <main className="flex-1 relative overflow-hidden flex flex-col">
-          <div className="flex-1 h-full">
-            {renderContent()}
-          </div>
-
+          <div className="flex-1 h-full">{renderContent()}</div>
           {isGeneratingBook && (
             <div className="absolute inset-0 z-50 bg-stone-900/40 backdrop-blur-sm flex items-center justify-center flex-col text-white animate-fade-in">
                  <Loader2 className="animate-spin mb-4 text-rose-300" size={48} />
@@ -1121,16 +883,9 @@ const App: React.FC = () => {
                  <p className="text-sm opacity-80 mt-2">잠시만 기다려주세요</p>
             </div>
           )}
-
           <Toast message={toast.message} visible={toast.visible} />
         </main>
-
-        {showNavigation && (
-           <Navigation 
-             activeTab={activeTab} 
-             onTabChange={(tab) => setCurrentView(tab as any)} 
-           />
-        )}
+        {showNavigation && <Navigation activeTab={activeTab} onTabChange={(tab) => navigate(tab)} />}
       </div>
     </div>
   );

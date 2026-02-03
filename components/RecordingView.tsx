@@ -47,6 +47,7 @@ interface RecordingViewProps {
 const RecordingView: React.FC<RecordingViewProps> = ({ onConfirm, onCancel, question }) => {
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
+  const [interimTranscript, setInterimTranscript] = useState(''); // Added state for real-time feedback
   const [timer, setTimer] = useState(0);
   const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
   const timerRef = useRef<number | null>(null);
@@ -59,24 +60,25 @@ const RecordingView: React.FC<RecordingViewProps> = ({ onConfirm, onCancel, ques
       if (SpeechRecognitionCtor) {
         const recognitionInstance = new SpeechRecognitionCtor();
         recognitionInstance.continuous = true;
-        recognitionInstance.interimResults = true;
+        recognitionInstance.interimResults = true; // Essential for real-time feedback
         recognitionInstance.lang = 'ko-KR';
 
         recognitionInstance.onresult = (event: SpeechRecognitionEvent) => {
-          let interimTranscript = '';
-          let finalTranscript = '';
+          let finalChunk = '';
+          let interimChunk = '';
 
           for (let i = event.resultIndex; i < event.results.length; ++i) {
             if (event.results[i].isFinal) {
-              finalTranscript += event.results[i][0].transcript;
+              finalChunk += event.results[i][0].transcript;
             } else {
-              interimTranscript += event.results[i][0].transcript;
+              interimChunk += event.results[i][0].transcript;
             }
           }
           
-          if (finalTranscript) {
-            setTranscript((prev) => prev + " " + finalTranscript);
+          if (finalChunk) {
+            setTranscript((prev) => (prev + " " + finalChunk).trim());
           }
+          setInterimTranscript(interimChunk);
         };
 
         recognitionInstance.onerror = (event: any) => {
@@ -110,8 +112,19 @@ const RecordingView: React.FC<RecordingViewProps> = ({ onConfirm, onCancel, ques
       recognition?.stop();
       setIsListening(false);
     } else {
+      // Clear previous interim results when starting new session if needed, 
+      // but usually we keep transcript. 
+      setInterimTranscript(''); 
       recognition?.start();
       setIsListening(true);
+    }
+  };
+
+  const handleConfirm = () => {
+    // Combine final transcript with any remaining interim text
+    const fullText = (transcript + " " + interimTranscript).trim();
+    if (fullText) {
+      onConfirm(fullText);
     }
   };
 
@@ -120,6 +133,8 @@ const RecordingView: React.FC<RecordingViewProps> = ({ onConfirm, onCancel, ques
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
+
+  const hasContent = transcript.length > 0 || interimTranscript.length > 0;
 
   return (
     <div className="absolute inset-0 z-[60] flex flex-col bg-[#FDF6F0] h-[100dvh] overflow-hidden animate-fade-enter">
@@ -172,9 +187,9 @@ const RecordingView: React.FC<RecordingViewProps> = ({ onConfirm, onCancel, ques
 
         {/* Real-time Transcript - Scrollable Area */}
         <div className="mt-6 md:mt-10 w-full flex-1 min-h-[80px] overflow-y-auto text-center px-2 no-scrollbar">
-            {transcript ? (
+            {hasContent ? (
                <p className="text-lg font-medium text-stone-700 leading-relaxed break-keep animate-fade-in">
-                 "{transcript}"
+                 {transcript} <span className="text-stone-400">{interimTranscript}</span>
                </p>
             ) : (
                <p className="text-stone-400 text-sm">
@@ -214,17 +229,17 @@ const RecordingView: React.FC<RecordingViewProps> = ({ onConfirm, onCancel, ques
          {/* Save Button */}
          <div className="flex flex-col items-center gap-2 mb-4">
             <button 
-                onClick={() => onConfirm(transcript)} 
-                disabled={!transcript}
+                onClick={handleConfirm} 
+                disabled={!hasContent}
                 className={`w-14 h-14 rounded-full shadow-sm flex items-center justify-center transition-all ${
-                    transcript 
+                    hasContent 
                     ? 'bg-[#E8DCC4] text-[#5C5446] hover:bg-[#E0D0B0]' 
                     : 'bg-white text-stone-200 cursor-not-allowed'
                 }`}
             >
                 <Check size={24} />
             </button>
-            <span className={`text-[10px] font-bold uppercase transition-colors ${transcript ? 'text-[#8C8476]' : 'text-stone-300'}`}>Save</span>
+            <span className={`text-[10px] font-bold uppercase transition-colors ${hasContent ? 'text-[#8C8476]' : 'text-stone-300'}`}>Save</span>
          </div>
       </div>
     </div>
