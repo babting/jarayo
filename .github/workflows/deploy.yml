@@ -20,12 +20,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          # cache 설정을 삭제하여 lock 파일이 없어도 에러가 나지 않게 함
 
       - name: Install dependencies
         run: npm install
 
       - name: Build
-        # CI=false를 붙이면 사소한 경고 때문에 빌드가 멈추는 걸 막아줍니다.
         run: CI=false npm run build
 
       - name: Upload artifact
