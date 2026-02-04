@@ -1,19 +1,6 @@
-import { GoogleGenAI } from "@google/genai";
 import { DiaryEntry, StoryBook } from "../types";
 
-// Initialize the Google GenAI SDK
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
-// Fallback image (Soft watercolor style) in case of API failure
-// Replaced with a reliable Unsplash ID for a soft abstract texture
-const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?auto=format&fit=crop&w=800&q=80";
-
-// Optimized Style Prompt for Gemini Nano Banana (gemini-2.5-flash-image)
-// Updated to "Children's Storybook Style" as requested.
-const ILLUSTRATION_STYLE = "High-quality children's storybook illustration style. Soft watercolor textures mixed with colored pencil outlines. Whimsical, dreamy, and warm atmosphere. Flat 2D perspective, no photorealism, no 3D rendering. Pastel color palette with a paper texture background. Artistic and emotive.";
-
-// --- Demo Data for Storybook ---
-// Content expanded by 3x and images replaced with verified working URLs
+// --- Demo Data for Storybook (Preserved) ---
 const DEMO_STORYBOOKS = [
   {
     titleTemplate: "{name}의 꿈나라 모험",
@@ -37,117 +24,60 @@ const DEMO_STORYBOOKS = [
   }
 ];
 
-// 1. Generate Daily Question (using Gemini 3 Flash for Text)
+const MOCK_QUESTIONS = [
+  { text: "{name}(이)는 오늘 엄마 아빠랑 무엇을 하고 싶었을까요?", theme: "Love" },
+  { text: "오늘 저를 보며 가장 행복했던 순간은 언제인가요?", theme: "Joy" },
+  { text: "제가 잠들었을 때 엄마 아빠는 무슨 생각을 하셨나요?", theme: "Sleep" },
+  { text: "오늘 저에게 들려주고 싶은 노래가 있나요?", theme: "Play" },
+  { text: "{name}(이)가 오늘 처음 본 세상은 어떤 모습이었을까요?", theme: "Curiosity" }
+];
+
+const MOCK_IMAGES = [
+  "https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1520052205864-92d242b3a76b?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1555529733-0e670560f7e1?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&w=800&q=80"
+];
+
+// 1. Generate Daily Question (Mocked)
 export const generateDailyQuestion = async (babyName: string, weeks: number): Promise<{ text: string; theme: string }> => {
-  try {
-    const prompt = `
-      You are a cute ${weeks}-week-old baby named "${babyName}".
-      Ask your parents a short, touching, or funny question about today.
-      Themes: Love, Curiosity, Sleep, Play, Food.
-      
-      Output strictly a JSON object with:
-      - "text": The question in Korean (informal, cute tone).
-      - "theme": One English word representing the mood (e.g., Love, Joy).
-    `;
-
-    const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
-      contents: prompt,
-      config: { responseMimeType: 'application/json' }
-    });
-
-    const data = JSON.parse(response.text || '{}');
-    return { 
-      text: data.text || `${babyName}(이)는 오늘 엄마 아빠랑 무엇을 하고 싶었을까요?`, 
-      theme: data.theme || "Love" 
-    };
-  } catch (e) {
-    console.error("Question generation failed", e);
-    return { text: "오늘 저를 보며 가장 행복했던 순간은 언제인가요?", theme: "Love" };
-  }
+  await new Promise(resolve => setTimeout(resolve, 800)); // Simulate network delay
+  const randomQ = MOCK_QUESTIONS[Math.floor(Math.random() * MOCK_QUESTIONS.length)];
+  return {
+    text: randomQ.text.replace("{name}", babyName),
+    theme: randomQ.theme
+  };
 };
 
-// 2. Transform Text to Baby Perspective (using Gemini 3 Flash for Text)
+// 2. Transform Text to Baby Perspective (Mocked)
 export const transformToBabyPerspective = async (
   combinedParentInput: string,
   babyName: string,
   weeks: number
 ): Promise<Partial<DiaryEntry>> => {
-  try {
-    const prompt = `
-      You are "${babyName}", a ${weeks}-week-old baby.
-      Rewrite the following parents' voice note log from YOUR perspective (First person '나').
-      
-      Parents' Input: "${combinedParentInput}"
-      
-      Guidelines:
-      - Use cute, imaginative, and sensory-focused language (sounds, smells, touch).
-      - Interpret ordinary events as magical adventures (e.g., bath -> water kingdom, dad -> giant).
-      - Style: Pure, lovely, emotional, like a fairytale.
-      - Output strictly a JSON object with:
-        - "title": A creative title for the diary.
-        - "babyContent": The rewritten story (3-4 sentences, Korean).
-        - "mood": One of ['happy', 'calm', 'sleepy', 'playful'].
-    `;
+  await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate processing
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
-      contents: prompt,
-      config: { responseMimeType: 'application/json' }
-    });
+  // Simple logic to make it feel slightly dynamic without AI
+  const titles = ["오늘의 신나는 모험", "엄마 아빠와 함께한 하루", "내가 제일 좋아하는 시간"];
+  const selectedTitle = titles[Math.floor(Math.random() * titles.length)];
 
-    const data = JSON.parse(response.text || '{}');
-    return {
-      title: data.title || "나의 하루",
-      babyContent: data.babyContent || "오늘도 사랑받아서 행복해요.",
-      mood: data.mood || 'happy'
-    };
-  } catch (e) {
-    console.error("Text transformation failed", e);
-    return { 
-      title: "사랑스러운 하루", 
-      babyContent: "기억은 안 나지만 기분 좋은 하루였어요.", 
-      mood: 'happy' 
-    };
-  }
+  return {
+    title: selectedTitle,
+    babyContent: `(데모 모드) ${babyName}의 시선으로 변환된 일기입니다.\n\n엄마 아빠가 들려준 이야기: "${combinedParentInput.length > 30 ? combinedParentInput.substring(0, 30) + "..." : combinedParentInput}"\n\n오늘도 사랑 듬뿍 받는 하루를 보냈어요. 내일도 재미있는 일이 가득했으면 좋겠어요!`,
+    mood: 'happy'
+  };
 };
 
-// 3. Generate Illustration (using Gemini 2.5 Flash Image / Nano Banana)
+// 3. Generate Illustration (Mocked)
 export const generateDiaryIllustration = async (storyText: string, mood: string = 'happy'): Promise<string> => {
-  try {
-    // Explicitly using 'gemini-2.5-flash-image' (Nano Banana)
-    // Updated prompt to match the "Storybook" format the user liked.
-    const prompt = `Draw a page from a children's storybook based on this text: "${storyText}". 
-    Mood: ${mood}. 
-    Style: ${ILLUSTRATION_STYLE}`;
-
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash-image',
-      contents: {
-        parts: [{ text: prompt }]
-      },
-      config: {
-        imageConfig: {
-            aspectRatio: "1:1"
-        }
-      }
-    });
-
-    for (const part of response.candidates?.[0]?.content?.parts || []) {
-      if (part.inlineData) {
-        return `data:image/png;base64,${part.inlineData.data}`;
-      }
-    }
-    return FALLBACK_IMAGE;
-  } catch (e) {
-    console.error("Image generation failed", e);
-    return FALLBACK_IMAGE;
-  }
+  await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate generation
+  // Return a random high-quality image from the mock list
+  return MOCK_IMAGES[Math.floor(Math.random() * MOCK_IMAGES.length)];
 };
 
-// 4. Generate Monthly Storybook (MOCK DATA Implementation)
+// 4. Generate Monthly Storybook (Mocked)
 export const generateMonthlyStorybook = async (entries: DiaryEntry[], babyName: string, gender: 'boy' | 'girl'): Promise<StoryBook> => {
-  // Use mock data randomly instead of API call
+  // Use mock data randomly
   await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate 2s delay for "processing" feel
 
   const randomIndex = Math.floor(Math.random() * DEMO_STORYBOOKS.length);
