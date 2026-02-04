@@ -4,7 +4,7 @@ import RecordingView from './components/RecordingView';
 import CalendarModal from './components/CalendarModal';
 import { generateDailyQuestion, transformToBabyPerspective, generateDiaryIllustration, generateMonthlyStorybook } from './services/geminiService';
 import { DiaryEntry, BabyProfile, DailyQuestion, VoiceNote, StoryBook } from './types';
-import { Sparkles, Loader2, Image as ImageIcon, Calendar as CalendarIcon, ChevronLeft, ChevronRight, LayoutGrid, BookOpen, Plus, Clock, Heart, Search, Wand2, RefreshCw, X, Crown, Play, Pause, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { Sparkles, Loader2, Image as ImageIcon, Calendar as CalendarIcon, ChevronLeft, ChevronRight, LayoutGrid, BookOpen, Plus, Clock, Heart, Search, Wand2, RefreshCw, Crown, Play, Pause, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { storage } from './utils/storage';
 
 // --- Mock Data Setup ---
@@ -16,6 +16,50 @@ const DEFAULT_PROFILE: BabyProfile = {
 
 const DEMO_ENTRIES: DiaryEntry[] = [
   {
+    id: '2024-02-14',
+    date: '2024-02-14T18:00:00.000Z',
+    babyAgeWeeks: 6,
+    voiceNotes: [
+      { id: 'v_new_1', timestamp: '2024-02-14T18:05:00.000Z', transcript: "우리 쑥쑥이, 오늘 아빠가 비행기 태워줬지? 까르르 웃는 소리에 아빠 심장이 녹아버렸어." },
+      { id: 'v_new_2', timestamp: '2024-02-14T18:10:00.000Z', transcript: "높이 올라가는 게 그렇게 좋아? 나중에는 진짜 비행기 타고 여행 가자." }
+    ],
+    babyContent: "몸이 붕~ 하고 하늘로 솟아올랐어요! 거인 아빠의 손은 단단한 날개 같아요. 천장에 달린 반짝이는 전등이 내 눈앞까지 다가왔다가 멀어지기를 반복했죠.\n\n내 입에서는 나도 모르게 '까르르' 하는 새소리가 튀어나왔어요. 배가 간질간질하고 세상이 빙글빙글 도는 기분, 정말 최고였답니다! 아빠 거인의 얼굴이 붉게 물들며 같이 웃고 있었어요. 우리는 함께 하늘을 나는 연습을 한 거예요.",
+    title: "아빠 비행기 탑승 완료!",
+    mood: 'playful',
+    // Sky/Clouds - Updated to a clearer, more whimsical cloud image
+    mainImageUrl: "https://images.unsplash.com/photo-1534088568595-a066f410bcda?auto=format&fit=crop&w=800&q=80", 
+    gallery: []
+  },
+  {
+    id: '2024-02-10',
+    date: '2024-02-10T12:00:00.000Z',
+    babyAgeWeeks: 5,
+    voiceNotes: [
+      { id: 'v_new_3', timestamp: '2024-02-10T12:30:00.000Z', transcript: "할머니 오셨어~ 우리 강아지, 할머니 품이 그렇게 편해? 바로 잠들어버리네." }
+    ],
+    babyContent: "오늘은 낯설지만 포근한 냄새가 나는 새로운 거인(할머니)이 나타났어요. 그 품은 엄마랑은 또 다른 느낌으로 보들보들하고 따뜻했죠.\n\n주름진 손길이 내 등을 쓸어내릴 때마다 스르르 눈이 감겼어요. 마치 오래된 자장가처럼 마음이 놓였거든요. 나는 그 품에 안겨 킁킁 냄새를 맡다가, 어느새 꿈나라로 여행을 떠나버렸답니다.",
+    title: "할머니 품은 솜사탕",
+    mood: 'calm',
+    // Cozy warm texture - Verified ID
+    mainImageUrl: "https://images.unsplash.com/photo-1520052205864-92d242b3a76b?auto=format&fit=crop&w=800&q=80", 
+    gallery: []
+  },
+  {
+    id: '2024-02-05',
+    date: '2024-02-05T14:00:00.000Z',
+    babyAgeWeeks: 5,
+    voiceNotes: [
+      { id: 'v_new_4', timestamp: '2024-02-05T14:05:00.000Z', transcript: "오늘 터미타임 연습하느라 고생했어. 고개 빳빳하게 드는 거 보니까 금방 뒤집겠는데?" },
+      { id: 'v_new_5', timestamp: '2024-02-05T14:10:00.000Z', transcript: "힘들어서 잉~ 하고 울었지만 끝까지 포기 안 한 거 대견해." }
+    ],
+    babyContent: "세상이 뒤집혔어요! 바닥이 내 배를 꾹 누르고, 머리는 너무 무거워서 자꾸만 쿵 하고 떨어지려고 했죠.\n\n하지만 나는 젖 먹던 힘을 다해 고개를 들어 올렸어요. 눈앞에 알록달록한 장난감들이 '힘내!'라고 응원하고 있었거든요. 팔이 부들부들 떨리고 땀이 났지만, 거인들이 박수 치며 환호해 줘서 멈출 수가 없었답니다. 나는 오늘 세상에서 제일 힘센 아기가 된 기분이었어요.",
+    title: "천하장사 터미타임 도전",
+    mood: 'playful',
+    // Playful/Toys - Verified ID
+    mainImageUrl: "https://images.unsplash.com/photo-1596464716127-f2a82984de30?auto=format&fit=crop&w=800&q=80", 
+    gallery: []
+  },
+  {
     id: '2024-01-29', 
     date: '2024-01-29T14:30:00.000Z',
     babyAgeWeeks: 4,
@@ -26,7 +70,8 @@ const DEMO_ENTRIES: DiaryEntry[] = [
     babyContent: "오늘 나는 거대한 물의 왕국으로 모험을 떠났어요! 첨벙첨벙! 내가 발을 구를 때마다 투명한 보석들이 공중으로 튀어 올랐답니다. \n\n둥둥 떠다니는 노란 오리 친구는 나에게 다가와 비밀 이야기를 속삭여 주었어요. '너는 물의 요정이니?' 하고 묻는 것 같았죠. 하얀 구름 같은 거품들이 내 몸을 포근하게 감싸주었고, 나는 그 속에서 마음껏 헤엄쳤어요. \n\n마지막에 거인(엄마/아빠)이 커다란 수건으로 나를 감싸주었을 때는, 마치 따뜻한 구름 속에 안긴 기분이었답니다.",
     title: "첨벙첨벙! 물의 왕국 탐험",
     mood: 'happy',
-    mainImageUrl: "https://images.unsplash.com/photo-1533038590840-1cde6e668a91?q=80&w=800&auto=format&fit=crop", // Bubbles/Pool
+    // Bubbles/Water - Verified ID
+    mainImageUrl: "https://images.unsplash.com/photo-1519834785169-98be25ec3f84?auto=format&fit=crop&w=800&q=80", 
     gallery: [] 
   },
   {
@@ -39,7 +84,8 @@ const DEMO_ENTRIES: DiaryEntry[] = [
     babyContent: "내 눈앞에 거대한 초록색 거인이 나타났어요! 엄마는 그걸 '나무'라고 불렀지만, 나는 알아요. 그건 바람과 춤추는 요정들의 집이라는 걸요. \n\n수많은 초록 손바닥들이 나를 향해 인사를 건네며 사락사락 노래를 불렀어요. 나뭇잎 사이로 쏟아지는 햇살 조각들은 마치 반짝이는 가루 같아서 잡으려고 손을 뻗었지만, 어느새 내 뺨에 닿아 따뜻한 뽀뽀를 남기고 사라졌답니다. \n\n세상은 참 신기하고 아름다운 색깔들로 가득 차 있어요. 나는 오늘 초록색 친구와 가장 친해진 것 같아요.",
     title: "초록 거인과의 만남",
     mood: 'calm',
-    mainImageUrl: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=800&auto=format&fit=crop", // Green Forest
+    // Nature/Forest - Updated to a vibrant, deep green forest looking up
+    mainImageUrl: "https://images.unsplash.com/photo-1511497584788-876760111969?auto=format&fit=crop&w=800&q=80", 
     gallery: []
   },
   {
@@ -52,7 +98,22 @@ const DEMO_ENTRIES: DiaryEntry[] = [
     babyContent: "눈꺼풀이 점점 무거워져요. 어두운 밤이 찾아오자 세상은 고요한 마법에 걸렸어요. 엄마의 심장 소리가 쿵, 쿵, 쿵... 세상에서 가장 편안한 자장가 같아요. \n\n나는 이제 보들보들한 이불 배를 타고 꿈의 바다로 항해를 떠날 거예요. 저기 하늘에서 달님이 은은한 등불을 비춰주고 있네요. \n\n별들이 쏟아지는 은하수 미끄럼틀을 타고 내려가면, 꿈속 친구들이 나를 기다리고 있겠죠? 내일 아침 해님이 '안녕!' 하고 깨울 때까지, 나는 아주 긴 여행을 다녀올 거예요.",
     title: "은하수 미끄럼틀 여행",
     mood: 'sleepy',
-    mainImageUrl: "https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?q=80&w=800&auto=format&fit=crop", // Night Sky
+    // Starry Night - Updated to a stunning dreamy galaxy image
+    mainImageUrl: "https://images.unsplash.com/photo-1464802686167-b939a6910659?auto=format&fit=crop&w=800&q=80", 
+    gallery: []
+  },
+  {
+    id: '2024-01-20',
+    date: '2024-01-20T11:00:00.000Z',
+    babyAgeWeeks: 2,
+    voiceNotes: [
+      { id: 'v_new_6', timestamp: '2024-01-20T11:05:00.000Z', transcript: "처음으로 딸랑이 쥐어줬는데 안 놓치고 잘 잡고 있네? 우리 아가 손힘이 장사야." }
+    ],
+    babyContent: "내 손안에 이상하고 재미있는 물건이 들어왔어요. 흔들 때마다 '딸랑딸랑' 하고 고운 노랫소리가 났죠.\n\n내가 팔을 움직이면 소리가 나고, 멈추면 소리도 멈추는 게 너무 신기해서 계속 팔을 휘저었어요. 내 손이 마법 지팡이가 된 것 같았거든요! 거인들이 나를 보고 '우와~' 하고 감탄할 때마다 나는 더 신이 나서 딸랑이를 연주했답니다.",
+    title: "마법의 딸랑이 연주회",
+    mood: 'happy',
+    // Abstract/Playful - Verified ID
+    mainImageUrl: "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&w=800&q=80", 
     gallery: []
   }
 ];
@@ -144,7 +205,7 @@ const HomeView: React.FC<{
     }
   };
 
-  const DEFAULT_BG = "https://images.unsplash.com/photo-1519689680058-324335c77eba?q=80&w=1200&auto=format&fit=crop"; 
+  const DEFAULT_BG = "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?auto=format&fit=crop&w=1200&q=80"; // Soft pastel gradient (Verified)
   const currentBg = bgImage || DEFAULT_BG;
   const displayText = hasEntryToday
     ? "오늘도 이야기를 들려주어서 고마워,\n나한테 더 해주고 싶은 말이 있어?"
@@ -158,7 +219,7 @@ const HomeView: React.FC<{
           <span className="text-rose-350 text-sm font-bold mb-0.5 tracking-tight group-hover:text-rose-200 transition-colors">{profile.name}</span>
           <span className="text-3xl font-serif italic font-bold text-white tracking-tight text-shadow-sm group-hover:text-white/90 transition-colors">D+{days}</span>
         </button>
-        <div className="flex items-center gap-3 mt-1 pointer-events-auto">
+        <div className="flex items-center gap-3 mt-1 pointer-events-auto select-none">
           <DigitalClock />
         </div>
       </header>
@@ -719,30 +780,66 @@ const App: React.FC = () => {
   const [isGeneratingBook, setIsGeneratingBook] = useState(false);
   const [bookOrderStatus, setBookOrderStatus] = useState<'idle' | 'processing'>('idle');
   const [toast, setToast] = useState<{message: string; visible: boolean}>({message: '', visible: false});
+  
+  const [isDataLoaded, setIsDataLoaded] = useState(false);
 
   const todayId = new Date().toLocaleDateString('en-CA');
   const hasEntryToday = entries.some(e => e.id === todayId);
 
+  // 1. Initial Data Load
   useEffect(() => {
     const initData = async () => {
         try {
             const savedProfile = await storage.loadProfile();
             const savedEntries = await storage.loadEntries();
             const savedBg = await storage.loadBgImage();
+            
             if (savedProfile) setProfile(savedProfile);
             if (savedEntries && savedEntries.length > 0) setEntries(savedEntries);
             else setEntries(DEMO_ENTRIES);
             if (savedBg) setHomeBgImage(savedBg);
-        } catch (e) { console.error("Failed to load initial data", e); setEntries(DEMO_ENTRIES); }
+            
+            // Mark data as loaded so auto-save watchers can start
+            setIsDataLoaded(true);
+        } catch (e) { 
+            console.error("Failed to load initial data", e); 
+            setEntries(DEMO_ENTRIES);
+            setIsDataLoaded(true);
+        }
     };
     initData();
   }, []);
 
+  // 2. Auto-Save Watchers (Only active after initial load)
   useEffect(() => {
-    const init = async () => {
+    if (isDataLoaded) storage.saveProfile(profile);
+  }, [profile, isDataLoaded]);
+
+  useEffect(() => {
+    if (isDataLoaded) storage.saveEntries(entries);
+  }, [entries, isDataLoaded]);
+
+  useEffect(() => {
+    if (isDataLoaded && homeBgImage) storage.saveBgImage(homeBgImage);
+  }, [homeBgImage, isDataLoaded]);
+
+  useEffect(() => {
+    if (isDataLoaded && dailyQuestion) storage.saveDailyQuestion(dailyQuestion);
+  }, [dailyQuestion, isDataLoaded]);
+
+
+  // 3. Daily Question Logic (runs after profile load)
+  useEffect(() => {
+    const initQuestion = async () => {
+      // Wait for profile to be potentially loaded from storage to generate personalized question
+      if (!isDataLoaded) return;
+
       const todayStr = new Date().toLocaleDateString('en-CA');
       const savedQuestion = await storage.loadDailyQuestion();
-      if (savedQuestion && savedQuestion.date === todayStr) { setDailyQuestion(savedQuestion); return; }
+      if (savedQuestion && savedQuestion.date === todayStr) { 
+          setDailyQuestion(savedQuestion); 
+          return; 
+      }
 
       setLoadingQuestion(true);
       const weeks = calculateWeeks(profile.birthDate);
@@ -750,15 +847,14 @@ const App: React.FC = () => {
       const newQuestion: DailyQuestion = { id: Date.now().toString(), text: q.text, theme: q.theme, date: todayStr };
 
       setDailyQuestion(newQuestion);
-      await storage.saveDailyQuestion(newQuestion);
       setLoadingQuestion(false);
     };
-    init();
-  }, [profile.name, profile.birthDate]);
+    initQuestion();
+  }, [profile.name, profile.birthDate, isDataLoaded]);
 
   const handleProfileUpdate = async (newProfile: BabyProfile) => {
     setProfile(newProfile);
-    await storage.saveProfile(newProfile);
+    // Auto-save via useEffect
   };
 
   const handleBgSelect = (file: File) => {
@@ -767,7 +863,7 @@ const App: React.FC = () => {
       if (e.target?.result) {
         const dataUrl = e.target.result as string;
         setHomeBgImage(dataUrl);
-        await storage.saveBgImage(dataUrl);
+        // Auto-save via useEffect
       }
     };
     reader.readAsDataURL(file);
@@ -783,14 +879,13 @@ const App: React.FC = () => {
             return entry;
         });
         setEntries(updatedEntries);
-        await storage.saveEntries(updatedEntries);
+        // Auto-save via useEffect
       }
     };
     reader.readAsDataURL(file);
   };
 
   const handleRecordingConfirm = async (transcript: string) => {
-    // Optimistic UI update: navigate immediately to diary view for the new entry
     const todayId = new Date().toLocaleDateString('en-CA');
     navigate(`diary/entry/${todayId}`);
     setProcessingDiary(true);
@@ -818,7 +913,7 @@ const App: React.FC = () => {
           updatedEntries = [{ id: todayId, date: nowIso, babyAgeWeeks: weeks, voiceNotes: [newVoiceNote], babyContent: textContent, title: generated.title || "사랑의 기록", mood: mood, mainImageUrl: illustrationUrl, gallery: [illustrationUrl] }, ...entries];
       }
       setEntries(updatedEntries);
-      await storage.saveEntries(updatedEntries);
+      // Auto-save via useEffect
     } catch (e) {
       console.error(e);
       alert("일기를 생성하는 도중 오류가 발생했습니다.");
@@ -879,8 +974,8 @@ const App: React.FC = () => {
           {isGeneratingBook && (
             <div className="absolute inset-0 z-50 bg-stone-900/40 backdrop-blur-sm flex items-center justify-center flex-col text-white animate-fade-in">
                  <Loader2 className="animate-spin mb-4 text-rose-300" size={48} />
-                 <p className="font-bold text-lg">{profile.name} {profile.gender === 'boy' ? '왕자님' : '공주님'}의 이야기를 엮는 중...</p>
-                 <p className="text-sm opacity-80 mt-2">잠시만 기다려주세요</p>
+                 <p className="font-bold text-lg">{profile.name} {profile.gender === 'boy' ? '왕자님' : '공주님'}의 표지를 그리는 중...</p>
+                 <p className="text-sm opacity-80 mt-2">이야기도 함께 만들고 있어요</p>
             </div>
           )}
           <Toast message={toast.message} visible={toast.visible} />
